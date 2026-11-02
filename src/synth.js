@@ -26,10 +26,10 @@ export function createSynth({ audioContext }) {
     output: melodyBus,
     polyphony: 4,
     voiceDefaults: {
-      amplitudes: [1, 0.5, 0.25, 0.125, 0.0625],
-      attack: 0.02,
+      amplitudes: [1, 0.2, 0.1, 0.05, 0.025],
+      attack: 0.1,
       release: 0.2,
-      vibratoDepth: 0,
+      vibratoDepth: 20,
       vibratoRate: 5,
     },
   });
@@ -40,10 +40,10 @@ export function createSynth({ audioContext }) {
     polyphony: 8,
     voiceDefaults: {
       amplitudes: [1, 0.5, 0.25, 0.125, 0.0625],
-      attack: 0.02,
+      attack: 0.1,
       release: 0.2,
-      vibratoDepth: 0,
-      vibratoRate: 5,
+      vibratoDepth: 15,
+      vibratoRate: 1,
     },
   });
 
