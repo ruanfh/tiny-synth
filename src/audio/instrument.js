@@ -27,6 +27,7 @@ export function createInstrument({
   }
 
   const activeVoices = [];
+  const voiceGain = 1 / polyphony;
 
   let latestTailEndTime = 0;
   let disposed = false;
@@ -123,7 +124,7 @@ export function createInstrument({
     const voice = createVoice(options);
 
     const outputGain = audioContext.createGain();
-    outputGain.gain.value = 1;
+    outputGain.gain.value = voiceGain;
 
     voice.output.connect(outputGain);
     outputGain.connect(output);

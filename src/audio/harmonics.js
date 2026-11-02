@@ -22,6 +22,19 @@ export function createHarmonics({
   validateFrequency(frequency);
   validateAmplitudes(amplitudes);
 
+  function normalizeAmplitudes(amplitudes) {
+    const sum = amplitudes.reduce(
+      (total, amplitude) => total + amplitude,
+      0
+    );
+
+    if (sum === 0) {
+      return amplitudes.map(() => 0);
+    }
+
+    return amplitudes.map(amplitude => amplitude / sum);
+  }
+
   const output = audioContext.createGain();
   const nyquist = audioContext.sampleRate / 2;
 
@@ -33,7 +46,7 @@ export function createHarmonics({
   let stopped = false;
   let cleanedUp = false;
   let currentFrequency = frequency;
-  let currentAmplitudes = [...amplitudes];
+  let currentAmplitudes = normalizeAmplitudes(amplitudes);
   let endedCount = 0;
 
   function updatePartialLevels(
@@ -151,7 +164,7 @@ export function createHarmonics({
       if (stopped) return;
 
       validateAmplitudes(nextAmplitudes);
-      currentAmplitudes = [...nextAmplitudes];
+      currentAmplitudes = normalizeAmplitudes(nextAmplitudes);
 
       updatePartialLevels(when, true);
     },
