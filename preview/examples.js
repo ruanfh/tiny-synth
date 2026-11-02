@@ -2,14 +2,23 @@ import {
     createExample as createSingleNoteExample,
 } from "../examples/01-single-note.js";
 
+import {
+    createExample as createChordExample,
+} from "../examples/02-chord.js";
+
 export function setupExamples({ ensureAudio, getSynth }) {
     let singleNoteExample;
+    let chordExample;
 
-    const playButton = document.querySelector("#example-play");
-    const stopButton = document.querySelector("#example-stop");
-    const exampleSource = document.querySelector("#example-source");
+    const singleNotePlay = document.querySelector("#example-play");
+    const singleNoteStop = document.querySelector("#example-stop");
+    const singleNoteSource = document.querySelector("#example-source");
 
-    playButton.addEventListener("click", async () => {
+    const chordPlay = document.querySelector("#chord-play");
+    const chordStop = document.querySelector("#chord-stop");
+    const chordSource = document.querySelector("#chord-source");
+
+    singleNotePlay.addEventListener("click", async () => {
         await ensureAudio();
 
         if (!singleNoteExample) {
@@ -19,33 +28,57 @@ export function setupExamples({ ensureAudio, getSynth }) {
         singleNoteExample.play();
     });
 
-    stopButton.addEventListener("click", () => {
+    singleNoteStop.addEventListener("click", () => {
         singleNoteExample?.stop();
     });
 
-    fetch(new URL("../examples/01-single-note.js", import.meta.url))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Could not load example source");
-            }
+    chordPlay.addEventListener("click", async () => {
+        await ensureAudio();
 
-            return response.text();
-        })
-        .then(source => {
-            exampleSource.textContent = source;
+        if (!chordExample) {
+            chordExample = createChordExample(getSynth());
+        }
 
-            if (window.hljs) {
-                window.hljs.highlightElement(exampleSource);
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            exampleSource.textContent = error.message;
-        });
+        chordExample.play();
+    });
+
+    chordStop.addEventListener("click", () => {
+        chordExample?.stop();
+    });
+
+    loadSource(
+        "../examples/01-single-note.js",
+        singleNoteSource
+    );
+
+    loadSource(
+        "../examples/02-chord.js",
+        chordSource
+    );
+
+    function loadSource(path, element) {
+        fetch(new URL(path, import.meta.url))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Could not load example source");
+                }
+
+                return response.text();
+            })
+            .then(source => {
+                element.textContent = source;
+                window.hljs?.highlightElement(element);
+            })
+            .catch(error => {
+                console.error(error);
+                element.textContent = error.message;
+            });
+    }
 
     return {
         dispose() {
             singleNoteExample?.stop();
+            chordExample?.stop();
         },
     };
 }
