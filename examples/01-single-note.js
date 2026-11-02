@@ -5,10 +5,7 @@ export function createExample(synth) {
     play() {
       if (note?.isPlaying) return;
 
-      note = synth.instruments.melody.play({
-        frequency: 440,
-        velocity: 0.4,
-      });
+      note = synth.instruments.melody.play(440);
     },
 
     stop() {

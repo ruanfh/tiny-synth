@@ -18,10 +18,7 @@ const synth = createSynth({ audioContext });
 
 synth.output.connect(audioContext.destination);
 
-const note = synth.instruments.melody.play({
-  frequency: 440,
-  velocity: 0.8,
-});
+const note = synth.instruments.melody.play(440);
 
 // Stop the note
 note.stop();

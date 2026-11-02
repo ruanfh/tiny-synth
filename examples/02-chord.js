@@ -8,10 +8,7 @@ export function createExample(synth) {
       const frequencies = [261.63, 329.63, 392.00]; // C major
 
       notes = frequencies.map(frequency =>
-        synth.instruments.harmony.play({
-          frequency,
-          velocity: 0.3,
-        })
+        synth.instruments.harmony.play(frequency)
       );
     },
 

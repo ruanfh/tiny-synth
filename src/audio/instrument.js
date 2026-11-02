@@ -29,6 +29,14 @@ export function createInstrument({
   const activeVoices = [];
   const voiceGain = 1 / polyphony;
 
+  const settings = {
+    amplitudes: [...(voiceDefaults.amplitudes ?? [1, 0, 0, 0, 0])],
+    vibratoDepth: voiceDefaults.vibratoDepth ?? 0,
+    vibratoRate: voiceDefaults.vibratoRate ?? 5,
+    attack: voiceDefaults.attack ?? 0.02,
+    release: voiceDefaults.release ?? 0.2,
+  };
+
   let latestTailEndTime = 0;
   let disposed = false;
 
@@ -64,7 +72,7 @@ export function createInstrument({
     const param = entry.outputGain.gain;
 
     param.cancelScheduledValues(when);
-    param.setValueAtTime(1, when);
+    param.setValueAtTime(voiceGain, when);
     param.linearRampToValueAtTime(0, when + STEAL_FADE);
 
     entry.voice.stop(when);
@@ -102,26 +110,21 @@ export function createInstrument({
     stealVoice(candidate, when);
   }
 
-  function play(noteOptions = {}) {
+  function play(frequency, velocity = 1) {
     if (disposed) {
       throw new Error("Cannot play: instrument has been disposed");
-    }
-
-    if (!noteOptions || typeof noteOptions !== "object") {
-      throw new TypeError("noteOptions must be an object");
     }
 
     const now = audioContext.currentTime;
 
     allocateVoice(now);
 
-    const options = {
-      ...voiceDefaults,
-      ...noteOptions,
+    const voice = createVoice({
+      ...settings,
       audioContext,
-    };
-
-    const voice = createVoice(options);
+      frequency,
+      velocity,
+    });
 
     const outputGain = audioContext.createGain();
     outputGain.gain.value = voiceGain;
@@ -134,7 +137,7 @@ export function createInstrument({
       outputGain,
       startedAt: now,
       releasing: false,
-      release: options.release ?? 0.2,
+      release: settings.release,
     };
 
     activeVoices.push(entry);
@@ -157,27 +160,6 @@ export function createInstrument({
     return {
       stop,
 
-      setAmplitudes(nextAmplitudes) {
-        if (!isActive()) return;
-        voice.setAmplitudes(nextAmplitudes);
-      },
-
-      setVibratoDepth(nextDepth) {
-        if (!isActive()) return;
-        voice.setVibratoDepth(nextDepth);
-      },
-
-      setVibratoRate(nextRate) {
-        if (!isActive()) return;
-        voice.setVibratoRate(nextRate);
-      },
-
-      setRelease(nextRelease) {
-        if (!isActive()) return;
-        voice.setRelease(nextRelease);
-        entry.release = nextRelease;
-      },
-
       get isPlaying() {
         return isActive();
       },
@@ -187,6 +169,51 @@ export function createInstrument({
         voice.setFrequency(nextFrequency);
       },
     };
+  }
+
+  function setAmplitudes(nextAmplitudes) {
+    settings.amplitudes = [...nextAmplitudes];
+
+    for (const entry of activeVoices) {
+      if (!entry.releasing) {
+        entry.voice.setAmplitudes(settings.amplitudes);
+      }
+    }
+  }
+
+  function setVibratoDepth(nextDepth) {
+    settings.vibratoDepth = nextDepth;
+
+    for (const entry of activeVoices) {
+      if (!entry.releasing) {
+        entry.voice.setVibratoDepth(nextDepth);
+      }
+    }
+  }
+
+  function setVibratoRate(nextRate) {
+    settings.vibratoRate = nextRate;
+
+    for (const entry of activeVoices) {
+      if (!entry.releasing) {
+        entry.voice.setVibratoRate(nextRate);
+      }
+    }
+  }
+
+  function setAttack(nextAttack) {
+    settings.attack = nextAttack;
+  }
+
+  function setRelease(nextRelease) {
+    settings.release = nextRelease;
+
+    for (const entry of activeVoices) {
+      if (!entry.releasing) {
+        entry.voice.setRelease(nextRelease);
+        entry.release = nextRelease;
+      }
+    }
   }
 
   function stopAll(when = audioContext.currentTime) {
@@ -224,6 +251,11 @@ export function createInstrument({
   return {
     output,
     play,
+    setAmplitudes,
+    setVibratoDepth,
+    setVibratoRate,
+    setAttack,
+    setRelease,
     stopAll,
     dispose,
 

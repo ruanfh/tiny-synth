@@ -42,6 +42,7 @@ const harmonicOutputs = amplitudes.map((_, index) =>
 
 let audioContext;
 let synth;
+let harmony;
 let activeNotes = [];
 let activeIntervals = [];
 
@@ -52,6 +53,9 @@ async function ensureAudio() {
 
     // The host owns the connection to the destination.
     synth.output.connect(audioContext.destination);
+
+    harmony = synth.instruments.harmony;
+    configureInstrument();
   }
 
   if (audioContext.state !== "running") {
@@ -59,10 +63,19 @@ async function ensureAudio() {
   }
 }
 
+function configureInstrument() {
+  harmony.setAmplitudes(amplitudes);
+  harmony.setVibratoDepth(Number(depthInput.value));
+  harmony.setVibratoRate(Number(rateInput.value));
+  harmony.setAttack(Number(attackInput.value));
+  harmony.setRelease(Number(releaseInput.value));
+}
+
 function updateMasterLevel() {
   if (!synth) return;
 
   const level = Number(masterInput.value) / 100;
+
   synth.output.gain.setTargetAtTime(
     level,
     audioContext.currentTime,
@@ -90,25 +103,14 @@ async function playChord() {
 
   const rootFrequency = Number(frequencyInput.value);
   const intervals = chordIntervals[chordInput.value];
-  const voiceLevel = 0.35 / Math.sqrt(intervals.length);
+  const velocity = 0.35 / Math.sqrt(intervals.length);
 
   for (const semitones of intervals) {
     const frequency =
       rootFrequency * Math.pow(2, semitones / 12);
 
     activeIntervals.push(semitones);
-
-    const note = synth.instruments.harmony.play({
-      frequency,
-      velocity: voiceLevel,
-      amplitudes: [...amplitudes],
-      vibratoDepth: Number(depthInput.value),
-      vibratoRate: Number(rateInput.value),
-      attack: Number(attackInput.value),
-      release: Number(releaseInput.value),
-    });
-
-    activeNotes.push(note);
+    activeNotes.push(harmony.play(frequency, velocity));
   }
 }
 
@@ -133,42 +135,34 @@ frequencyInput.addEventListener("input", () => {
 harmonicInputs.forEach((input, index) => {
   input.addEventListener("input", () => {
     amplitudes[index] = Number(input.value);
+
     harmonicOutputs[index].textContent =
       amplitudes[index].toFixed(3);
 
-    for (const note of activeNotes) {
-      note.setAmplitudes([...amplitudes]);
+    if (harmony) {
+      harmony.setAmplitudes(amplitudes);
     }
   });
 });
 
 depthInput.addEventListener("input", () => {
   depthValue.textContent = depthInput.value;
-
-  for (const note of activeNotes) {
-    note.setVibratoDepth(Number(depthInput.value));
-  }
+  harmony?.setVibratoDepth(Number(depthInput.value));
 });
 
 rateInput.addEventListener("input", () => {
   rateValue.textContent = Number(rateInput.value).toFixed(1);
-
-  for (const note of activeNotes) {
-    note.setVibratoRate(Number(rateInput.value));
-  }
+  harmony?.setVibratoRate(Number(rateInput.value));
 });
 
 attackInput.addEventListener("input", () => {
   attackValue.textContent = Number(attackInput.value).toFixed(2);
-  // Attack applies to notes started after this change.
+  harmony?.setAttack(Number(attackInput.value));
 });
 
 releaseInput.addEventListener("input", () => {
   releaseValue.textContent = Number(releaseInput.value).toFixed(2);
-
-  for (const note of activeNotes) {
-    note.setRelease(Number(releaseInput.value));
-  }
+  harmony?.setRelease(Number(releaseInput.value));
 });
 
 masterInput.addEventListener("input", () => {
