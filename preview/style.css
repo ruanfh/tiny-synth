@@ -1,0 +1,173 @@
+:root {
+  color-scheme: dark;
+
+  --bg: #101318;
+  --surface: #191e27;
+  --surface-raised: #202733;
+  --border: #303947;
+
+  --text: #e6ebf3;
+  --muted: #9aa7ba;
+  --subtle: #748196;
+
+  --accent: #8bb8ff;
+  --accent-hover: #a8caff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 32px 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.frequency-control {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.frequency-control .value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.frequency-control input {
+  width: 100px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-raised);
+  color: var(--text);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.frequency-control input:focus {
+  border-color: var(--accent);
+}
+
+.frequency-control .value span {
+  color: var(--subtle);
+  font-size: 12px;
+}
+
+.harmonics {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 24px 0;
+}
+
+.harmonic {
+  display: grid;
+  grid-template-columns: 150px minmax(80px, 1fr) 45px;
+  align-items: center;
+  gap: 14px;
+}
+
+.harmonic label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.harmonic label strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.harmonic label span {
+  font-size: 11px;
+  color: var(--subtle);
+}
+
+.harmonic input {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.harmonic output {
+  color: var(--accent);
+  text-align: right;
+  font: 12px ui-monospace, monospace;
+}
+
+/* Shared range controls */
+input[type="range"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Buttons */
+button {
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+button:hover {
+  background: #293342;
+  border-color: #46566d;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Select controls */
+select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+/* Section spacing */
+section {
+  margin: 24px 0;
+}
+
+/* Responsive layout */
+@media (max-width: 550px) {
+  body {
+    padding: 20px 14px;
+  }
+
+  .harmonic {
+    grid-template-columns: 105px minmax(60px, 1fr) 38px;
+    gap: 8px;
+  }
+
+  .frequency-control {
+    align-items: flex-start;
+  }
+}
