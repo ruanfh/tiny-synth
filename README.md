@@ -1,13 +1,49 @@
 # tiny-synth
 
-A tiny, headless Web Audio synthesizer. The repository preview is developed alongside the library and imports the actual source modules.
+A tiny, opinionated synthesizer for the Web Audio API.
 
-## Run locally
+## Demo
 
-Serve the repository root using any static HTTP server.
+[Try the live demo](https://ruanfh.github.io/tiny-synth/)
 
-No Node.js, npm, bundler, or build step is required. The browser loads native JavaScript ES modules directly. Serve over HTTP(S); opening `index.html` through `file://` will generally prevent module loading.
+## Usage
 
-## Design boundaries
+The host application creates and owns the `AudioContext`.
 
-`src/` contains audio behavior only. `preview/` owns browser UI, controls, examples, and host-side routing. MIDI, sequencing, effects, and application-level mixing remain host responsibilities.
+```js
+import { createSynth } from "./src/index.js";
+
+const audioContext = new AudioContext();
+const synth = createSynth({ audioContext });
+
+synth.output.connect(audioContext.destination);
+
+const note = synth.instruments.melody.play({
+  frequency: 440,
+  velocity: 0.8,
+});
+
+// Stop the note
+note.stop();
+
+// Clean up when finished
+synth.dispose();
+```
+
+## Development
+
+Requires a modern browser with Web Audio API support.
+
+Run locally using a static HTTP server, for example:
+
+```bash
+python3 -m http.server 8000
+```
+
+Open [http://localhost:8000](http://localhost:8000).
+
+No build step or dependencies required.
+
+## License
+
+[MIT](LICENSE)
