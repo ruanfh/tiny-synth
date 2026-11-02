@@ -1,4 +1,5 @@
 import { createSynth } from "../src/index.js";
+import { setupExamples } from "./examples.js";
 
 const frequencyInput = document.querySelector("#frequency");
 const frequencyValue = document.querySelector("#frequency-value");
@@ -111,6 +112,11 @@ async function playChord() {
   }
 }
 
+const examples = setupExamples({
+  ensureAudio,
+  getSynth: () => synth,
+});
+
 frequencyInput.addEventListener("input", () => {
   frequencyValue.textContent = frequencyInput.value;
 
@@ -175,5 +181,6 @@ stopButton.addEventListener("click", stopChord);
 
 window.addEventListener("pagehide", () => {
   stopChord();
+  examples.dispose();
   synth?.dispose();
 });
