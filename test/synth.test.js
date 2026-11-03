@@ -260,3 +260,25 @@ test("new notes inherit the instrument's updated settings", () => {
         timers.runAll();
     });
 });
+
+test("rejects invalid note frequencies", () => {
+  withTestSynth(({ synth }) => {
+    for (const frequency of [0, -440, NaN, Infinity]) {
+      assert.throws(
+        () => synth.instruments.melody.play(frequency),
+        RangeError
+      );
+    }
+  });
+});
+
+test("rejects invalid velocities", () => {
+  withTestSynth(({ synth }) => {
+    for (const velocity of [-0.1, 1.1, NaN, Infinity]) {
+      assert.throws(
+        () => synth.instruments.melody.play(440, velocity),
+        RangeError
+      );
+    }
+  });
+});
