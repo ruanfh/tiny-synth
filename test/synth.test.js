@@ -125,3 +125,70 @@ test("prefers stealing a releasing voice over a held voice", () => {
     });
 });
 
+test("playMany starts all notes and returns usable handles", () => {
+  withTestSynth(({ synth, timers }) => {
+    const harmony = synth.instruments.harmony;
+
+    const notes = harmony.playMany([261.63, 329.63, 392]);
+
+    assert.equal(notes.length, 3);
+    assert.ok(notes.every(note => note.isPlaying));
+    assert.equal(harmony.activeVoiceCount, 3);
+
+    synth.dispose();
+    timers.runAll();
+  });
+});
+
+test("stopMany stops all notes in a group", () => {
+  withTestSynth(({ synth, timers }) => {
+    const harmony = synth.instruments.harmony;
+
+    const notes = harmony.playMany([261.63, 329.63, 392]);
+
+    harmony.stopMany(notes);
+
+    assert.ok(notes.every(note => !note.isPlaying));
+
+    synth.dispose();
+    timers.runAll();
+  });
+});
+
+test("stopMany rejects arrays not returned by playMany", () => {
+  withTestSynth(({ synth, timers }) => {
+    const harmony = synth.instruments.harmony;
+
+    const notes = [
+      harmony.play(261.63),
+      harmony.play(329.63),
+    ];
+
+    assert.throws(
+      () => harmony.stopMany(notes),
+      {
+        name: "TypeError",
+        message: "stopMany expects an array returned by playMany",
+      }
+    );
+
+    synth.dispose();
+    timers.runAll();
+  });
+});
+
+test("stopMany can safely stop the same group more than once", () => {
+  withTestSynth(({ synth, timers }) => {
+    const harmony = synth.instruments.harmony;
+
+    const notes = harmony.playMany([261.63, 329.63, 392]);
+
+    harmony.stopMany(notes);
+    harmony.stopMany(notes);
+
+    assert.ok(notes.every(note => !note.isPlaying));
+
+    synth.dispose();
+    timers.runAll();
+  });
+});
