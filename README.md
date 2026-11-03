@@ -90,6 +90,14 @@ There are two instruments available:
 const note = synth.instruments.melody.play(440);
 ```
 
+Velocity controls the volume of the note and is a normalized value between `0` and `1`.
+
+The default velocity is `1`. You can also specify a velocity between `0` and `1`:
+
+```js
+const note = synth.instruments.melody.play(440, 0.5);
+```
+
 ### Stop the note
 
 ```js
@@ -100,6 +108,46 @@ note.stop();
 
 ```js
 synth.dispose();
+```
+
+### Configure timbre
+
+```js
+synth.instruments.melody.setAmplitudes([1, 0.5, 0.25, 0.125, 0.0625]);
+```
+
+Where the first value is the fundamental and the others are the harmonics in order of lower to higher.
+
+### Vibrato depth
+
+Controls the vibrato depth in cents.
+
+```js
+synth.instruments.melody.setVibratoDepth(20);
+```
+
+### Vibrato rate
+
+Controls how fast the vibrato oscillates, in Hz.
+
+```js
+synth.instruments.melody.setVibratoRate(5)
+```
+
+### Envelope attack
+
+Controls how long the sound takes to reach its full amplitude after a note starts, in seconds.
+
+```js
+synth.instruments.melody.setAttack(0.1);
+```
+
+### Envelope release
+
+controls how long the sound takes to fade out after a note is stopped, in seconds.
+
+```js
+synth.instruments.melody.setRelease(0.5);
 ```
 
 ## Development
