@@ -176,6 +176,16 @@ Open [http://localhost:8000](http://localhost:8000).
 
 No build step or dependencies required.
 
+## Scope
+
+tiny-synth focuses on sound generation and instrument management. Musical
+sequencing and audio routing are the responsibility of the host application.
+
+- No built-in sequencing or scheduling.
+- No tempo or musical notation abstractions.
+- No automatic connection to the audio destination.
+- The host owns and manages the `AudioContext`.
+
 ## License
 
 [MIT](LICENSE)
