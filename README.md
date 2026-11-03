@@ -176,6 +176,12 @@ Open [http://localhost:8000](http://localhost:8000).
 
 No build step or dependencies required.
 
+### Testing
+
+```bash
+node --test test/*.test.js
+```
+
 ## Scope
 
 tiny-synth focuses on sound generation and instrument management. Musical
