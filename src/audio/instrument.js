@@ -28,6 +28,7 @@ export function createInstrument({
 
   const activeVoices = [];
   const voiceGain = 1 / polyphony;
+  const noteGroups = new WeakMap();
 
   const settings = {
     amplitudes: [...(voiceDefaults.amplitudes ?? [1, 0, 0, 0, 0])],
@@ -171,6 +172,28 @@ export function createInstrument({
     };
   }
 
+  function playMany(frequencies, velocity = 1) {
+    const notes = frequencies.map((frequency) => play(frequency, velocity));
+
+    noteGroups.set(notes, [...notes]);
+
+    return notes;
+  }
+
+  function stopMany(notes) {
+    const group = noteGroups.get(notes);
+
+    if (!group) {
+      throw new TypeError(
+        "stopMany expects an array returned by playMany"
+      );
+    }
+
+    for (const note of group) {
+      note.stop();
+    }
+  }
+
   function setAmplitudes(nextAmplitudes) {
     settings.amplitudes = [...nextAmplitudes];
 
@@ -251,6 +274,8 @@ export function createInstrument({
   return {
     output,
     play,
+    playMany,
+    stopMany,
     setAmplitudes,
     setVibratoDepth,
     setVibratoRate,

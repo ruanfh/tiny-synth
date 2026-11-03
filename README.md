@@ -104,6 +104,18 @@ const note = synth.instruments.melody.play(440, 0.5);
 note.stop();
 ```
 
+### Play many notes
+
+```js
+const notes = synth.instruments.harmony.playMany([261.63, 329.63, 392.00]);
+```
+
+### Stop many notes
+
+```js
+synth.instruments.harmony.stopMany(notes);
+```
+
 ### Clean up when finished
 
 ```js

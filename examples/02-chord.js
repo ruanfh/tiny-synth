@@ -7,13 +7,11 @@ export function createExample(synth) {
 
       const frequencies = [261.63, 329.63, 392.00]; // C major
 
-      notes = frequencies.map(frequency =>
-        synth.instruments.harmony.play(frequency)
-      );
+      notes = synth.instruments.harmony.playMany(frequencies);
     },
 
     stop() {
-      notes.forEach(note => note.stop());
+      synth.instruments.harmony.stopMany(notes);
       notes = [];
     },
   };
