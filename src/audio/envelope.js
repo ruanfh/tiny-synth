@@ -46,20 +46,15 @@ export function createEnvelope({
 
       const param = gain.gain;
 
-      // Hold the actual scheduled value when supported.
-      if (typeof param.cancelAndHoldAtTime === "function") {
-        param.cancelAndHoldAtTime(when);
-      } else {
-        // Fallback: calculate the level during the linear attack.
-        const elapsed = Math.max(0, when - startTime);
-        const level =
-          activeAttack === 0
-            ? 1
-            : Math.min(1, elapsed / activeAttack);
+      // Calculate the level during the linear attack.
+      const elapsed = Math.max(0, when - startTime);
+      const level =
+        activeAttack === 0
+          ? 1
+          : Math.min(1, elapsed / activeAttack);
 
-        param.cancelScheduledValues(when);
-        param.setValueAtTime(level, when);
-      }
+      param.cancelScheduledValues(when);
+      param.setValueAtTime(level, when);
 
       param.linearRampToValueAtTime(0, when + release);
     },
