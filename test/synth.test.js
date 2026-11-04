@@ -262,23 +262,133 @@ test("new notes inherit the instrument's updated settings", () => {
 });
 
 test("rejects invalid note frequencies", () => {
-  withTestSynth(({ synth }) => {
-    for (const frequency of [0, -440, NaN, Infinity]) {
-      assert.throws(
-        () => synth.instruments.melody.play(frequency),
-        RangeError
-      );
-    }
-  });
+    withTestSynth(({ synth }) => {
+        for (const frequency of [0, -440, NaN, Infinity]) {
+            assert.throws(
+                () => synth.instruments.melody.play(frequency),
+                RangeError
+            );
+        }
+    });
 });
 
 test("rejects invalid velocities", () => {
-  withTestSynth(({ synth }) => {
-    for (const velocity of [-0.1, 1.1, NaN, Infinity]) {
-      assert.throws(
-        () => synth.instruments.melody.play(440, velocity),
-        RangeError
-      );
-    }
+    withTestSynth(({ synth }) => {
+        for (const velocity of [-0.1, 1.1, NaN, Infinity]) {
+            assert.throws(
+                () => synth.instruments.melody.play(440, velocity),
+                RangeError
+            );
+        }
+    });
+});
+
+test("schedules a note to play in the future", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const note = synth.instruments.melody.play(440, 1, 1);
+
+        assert.equal(note.isPlaying, false);
+        assert.equal(synth.instruments.melody.activeVoiceCount, 0);
+
+        audioContext.currentTime = 1;
+        timers.runPending();
+
+        assert.equal(note.isPlaying, true);
+        assert.equal(synth.instruments.melody.activeVoiceCount, 1);
+
+        note.stop();
+        synth.dispose();
+        timers.runAll();
+    });
+});
+
+test("cancels a note scheduled for the future", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const note = synth.instruments.melody.play(440, 1, 1);
+
+        audioContext.currentTime = 0.5;
+        note.stop();
+
+        assert.equal(note.isPlaying, false);
+        assert.equal(synth.instruments.melody.activeVoiceCount, 0);
+
+        synth.dispose();
+        timers.runAll();
+    });
+});
+
+test("stopAll cancels notes scheduled in the future", () => {
+    withTestSynth(({ synth }) => {
+        const melody = synth.instruments.melody;
+        const note = melody.play(440, 1, 1);
+
+        assert.equal(note.isPlaying, false);
+        assert.equal(melody.activeVoiceCount, 0);
+
+        const tailDuration = melody.stopAll();
+
+        assert.equal(note.isPlaying, false);
+        assert.equal(melody.activeVoiceCount, 0);
+        assert.equal(tailDuration, 0);
+
+        synth.dispose();
+    });
+});
+
+test("continues playing until its scheduled stop time", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const note = synth.instruments.melody.play(440);
+
+        note.stop(2);
+
+        assert.equal(note.isPlaying, true);
+
+        audioContext.currentTime = 1.9;
+        assert.equal(note.isPlaying, true);
+
+        audioContext.currentTime = 2;
+        assert.equal(note.isPlaying, false);
+
+        synth.dispose();
+    });
+});
+
+test("does not steal voices scheduled to start in the future", () => {
+  withTestSynth(({ synth, audioContext, timers }) => {
+    const melody = synth.instruments.melody;
+    const startTime = audioContext.currentTime + 1;
+
+    const notes = [
+      melody.play(261.63, 1, startTime),
+      melody.play(329.63, 1, startTime + 0.2),
+      melody.play(392.00, 1, startTime + 0.4),
+      melody.play(523.25, 1, startTime + 0.6),
+    ];
+
+    assert.ok(notes.every(note => !note.isPlaying));
+    assert.equal(melody.activeVoiceCount, 0);
+
+    audioContext.currentTime = startTime;
+    timers.runPending();
+
+    assert.ok(notes[0].isPlaying);
+    assert.equal(melody.activeVoiceCount, 1);
+
+    audioContext.currentTime = startTime + 0.2;
+    timers.runPending();
+
+    assert.ok(notes.slice(0, 2).every(note => note.isPlaying));
+
+    audioContext.currentTime = startTime + 0.4;
+    timers.runPending();
+
+    audioContext.currentTime = startTime + 0.6;
+    timers.runPending();
+
+    assert.ok(notes.every(note => note.isPlaying));
+    assert.equal(melody.activeVoiceCount, 4);
+
+    synth.dispose();
+    timers.runPending();
   });
 });

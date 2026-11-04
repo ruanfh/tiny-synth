@@ -27,6 +27,7 @@ export function createInstrument({
   }
 
   const activeVoices = [];
+  const scheduledNotes = new Set();
   const voiceGain = 1 / polyphony;
   const noteGroups = new WeakMap();
 
@@ -53,6 +54,27 @@ export function createInstrument({
     entry.outputGain.disconnect();
   }
 
+  function scheduleNote(entry) {
+    const delay = Math.max(
+      0,
+      entry.startTime - audioContext.currentTime
+    );
+
+    window.setTimeout(() => {
+      if (entry.cancelled || disposed) return;
+
+      const remaining = entry.startTime - audioContext.currentTime;
+
+      if (remaining > 0) {
+        scheduleNote(entry);
+        return;
+      }
+
+      scheduledNotes.delete(entry);
+      startNote(entry);
+    }, delay * 1000);
+  }
+
   function scheduleCleanup(entry, when, release) {
     const endTime = when + release;
 
@@ -67,6 +89,46 @@ export function createInstrument({
       removeVoice(entry);
       disconnectVoice(entry);
     }, (delay + CLEANUP_MARGIN) * 1000);
+  }
+
+  function startNote(entry) {
+    if (entry.cancelled || disposed) return;
+
+    const now = audioContext.currentTime;
+
+    allocateVoice(now);
+
+    const voice = createVoice({
+      ...settings,
+      audioContext,
+      frequency: entry.frequency,
+      velocity: entry.velocity,
+    });
+
+    const outputGain = audioContext.createGain();
+    outputGain.gain.value = voiceGain;
+
+    voice.output.connect(outputGain);
+    outputGain.connect(output);
+
+    entry.voice = voice;
+    entry.outputGain = outputGain;
+    entry.startedAt = now;
+    entry.releasing = false;
+    entry.release = settings.release;
+
+    activeVoices.push(entry);
+
+    voice.start(entry.startTime);
+    if (entry.stopTime !== null) {
+      voice.stop(entry.stopTime);
+
+      if (entry.stopTime <= audioContext.currentTime) {
+        entry.releasing = true;
+      }
+
+      scheduleCleanup(entry, entry.stopTime, entry.release);
+    }
   }
 
   function stealVoice(entry, when) {
@@ -98,76 +160,121 @@ export function createInstrument({
 
     // Prefer an already-releasing voice.
     let candidate = activeVoices.find(
-      (entry) => entry.releasing
+      entry => entry.releasing
     );
 
-    // Otherwise steal the oldest held voice.
+    // Otherwise steal the oldest voice that has already started.
     if (!candidate) {
-      candidate = activeVoices.reduce((oldest, entry) =>
-        entry.startedAt < oldest.startedAt ? entry : oldest
+      const playingVoices = activeVoices.filter(
+        entry => entry.startTime <= when
+      );
+
+      candidate = playingVoices.reduce(
+        (oldest, entry) =>
+          !oldest || entry.startedAt < oldest.startedAt
+            ? entry
+            : oldest,
+        null
       );
     }
 
-    stealVoice(candidate, when);
+    // Never steal a voice that is only scheduled for the future.
+    if (candidate) {
+      stealVoice(candidate, when);
+    }
   }
 
-  function play(frequency, velocity = 1) {
+  function play(frequency, velocity = 1, when = audioContext.currentTime) {
     if (disposed) {
       throw new Error("Cannot play: instrument has been disposed");
     }
 
-    const now = audioContext.currentTime;
+    if (!Number.isFinite(frequency) || frequency <= 0) {
+      throw new RangeError("frequency must be a positive finite number");
+    }
 
-    allocateVoice(now);
+    if (!Number.isFinite(velocity) || velocity < 0 || velocity > 1) {
+      throw new RangeError("velocity must be between 0 and 1");
+    }
 
-    const voice = createVoice({
-      ...settings,
-      audioContext,
-      frequency,
-      velocity,
-    });
-
-    const outputGain = audioContext.createGain();
-    outputGain.gain.value = voiceGain;
-
-    voice.output.connect(outputGain);
-    outputGain.connect(output);
+    if (!Number.isFinite(when) || when < 0) {
+      throw new RangeError("when must be a non-negative finite number");
+    }
 
     const entry = {
-      voice,
-      outputGain,
-      startedAt: now,
+      frequency,
+      velocity,
+      startTime: when,
+      stopTime: null,
+      startedAt: null,
+      voice: null,
+      outputGain: null,
       releasing: false,
+      cancelled: false,
       release: settings.release,
     };
 
-    activeVoices.push(entry);
-
-    voice.start(now);
-
-    function isActive() {
-      return !entry.releasing && activeVoices.includes(entry);
+    if (when <= audioContext.currentTime) {
+      startNote(entry);
+    } else {
+      scheduledNotes.add(entry);
+      scheduleNote(entry);
     }
 
-    function stop(when = audioContext.currentTime) {
-      if (!isActive()) return;
+    function stop(stopTime = audioContext.currentTime) {
+      if (entry.cancelled || entry.stopTime !== null) return;
+      if (entry.voice && !activeVoices.includes(entry)) return;
 
-      entry.releasing = true;
+      if (!Number.isFinite(stopTime) || stopTime < 0) {
+        throw new RangeError("stopTime must be a non-negative finite number");
+      }
 
-      voice.stop(when);
-      scheduleCleanup(entry, when, entry.release);
+      if (stopTime < entry.startTime && !entry.voice) {
+        entry.cancelled = true;
+        scheduledNotes.delete(entry);
+        return;
+      }
+
+      entry.stopTime = stopTime;
+
+      if (entry.voice) {
+        entry.voice.stop(stopTime);
+
+        if (stopTime <= audioContext.currentTime) {
+          entry.releasing = true;
+        }
+
+        scheduleCleanup(entry, stopTime, entry.release);
+      }
     }
 
     return {
       stop,
 
       get isPlaying() {
-        return isActive();
+        return (
+          !entry.cancelled &&
+          entry.voice !== null &&
+          activeVoices.includes(entry) &&
+          audioContext.currentTime >= entry.startTime &&
+          (entry.stopTime === null ||
+            audioContext.currentTime < entry.stopTime) &&
+          entry.voice.isPlaying
+        );
       },
 
       setFrequency(nextFrequency) {
-        if (!isActive()) return;
-        voice.setFrequency(nextFrequency);
+        if (entry.cancelled) return;
+
+        if (entry.voice) {
+          entry.voice.setFrequency(nextFrequency);
+        } else {
+          if (!Number.isFinite(nextFrequency) || nextFrequency <= 0) {
+            throw new RangeError("frequency must be a positive finite number");
+          }
+
+          entry.frequency = nextFrequency;
+        }
       },
     };
   }
@@ -240,28 +347,41 @@ export function createInstrument({
   }
 
   function stopAll(when = audioContext.currentTime) {
+    for (const entry of [...scheduledNotes]) {
+      if (entry.startTime > when) {
+        entry.cancelled = true;
+        scheduledNotes.delete(entry);
+      } else {
+        entry.stopTime = when;
+      }
+    }
+
     for (const entry of [...activeVoices]) {
       if (entry.releasing) continue;
 
       entry.releasing = true;
       entry.voice.stop(when);
+
+      if (when < entry.startTime) {
+        removeVoice(entry);
+        disconnectVoice(entry);
+        continue;
+      }
+
       scheduleCleanup(entry, when, entry.release);
     }
 
     const latestEndTime = Math.max(
       latestTailEndTime,
-      ...activeVoices.map(
-        (entry) => entry.releasing
+      ...activeVoices.map(entry =>
+        entry.releasing
           ? audioContext.currentTime + entry.release
           : 0
       ),
       when
     );
 
-    return Math.max(
-      0,
-      latestEndTime - audioContext.currentTime
-    );
+    return Math.max(0, latestEndTime - audioContext.currentTime);
   }
 
   function dispose() {

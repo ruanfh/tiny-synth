@@ -117,6 +117,7 @@ async function playChord() {
 const examples = setupExamples({
   ensureAudio,
   getSynth: () => synth,
+  getAudioContext: () => audioContext,
 });
 
 frequencyInput.addEventListener("input", () => {

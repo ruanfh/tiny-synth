@@ -54,6 +54,8 @@ export function createVoice({
   let started = false;
   let stopped = false;
   let cleanupScheduled = false;
+  let startTime = null;
+  let stopTime = null;
 
   function cleanup() {
     if (cleanupScheduled) return;
@@ -66,7 +68,9 @@ export function createVoice({
 
   function start(when = audioContext.currentTime) {
     if (started || stopped) return;
+
     started = true;
+    startTime = when;
 
     harmonics.start(when);
     vibrato.start(when);
@@ -74,10 +78,20 @@ export function createVoice({
   }
 
   function stop(when = audioContext.currentTime) {
-    if (stopped) return;
-    stopped = true;
+    if (stopped || stopTime !== null) return;
 
     if (!started) {
+      stopped = true;
+      cleanup();
+      return;
+    }
+
+    stopTime = when;
+
+    if (when < startTime) {
+      stopped = true;
+      vibrato.stop(when);
+      harmonics.stop(when);
       cleanup();
       return;
     }
@@ -85,17 +99,15 @@ export function createVoice({
     envelope.stop(when);
 
     const endTime = when + envelope.release;
-
     vibrato.stop(endTime);
     harmonics.stop(endTime);
 
-    // Disconnect after the release has completed.
-    const delay = Math.max(
-      0,
-      endTime - audioContext.currentTime
-    );
+    const delay = Math.max(0, endTime - audioContext.currentTime);
 
-    window.setTimeout(cleanup, (delay + 0.1) * 1000);
+    window.setTimeout(() => {
+      stopped = true;
+      cleanup();
+    }, (delay + 0.1) * 1000);
   }
 
   return {
@@ -125,7 +137,14 @@ export function createVoice({
     },
 
     get isPlaying() {
-      return started && !stopped;
+      const now = audioContext.currentTime;
+
+      return (
+        started &&
+        !stopped &&
+        now >= startTime &&
+        (stopTime === null || now < stopTime)
+      );
     },
 
     setFrequency(nextFrequency, when = audioContext.currentTime) {
