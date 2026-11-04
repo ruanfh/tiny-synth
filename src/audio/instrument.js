@@ -111,9 +111,11 @@ export function createInstrument({
     stealVoice(candidate, when);
   }
 
-  function play(frequency, velocity = 1) {
-    if (disposed) {
-      throw new Error("Cannot play: instrument has been disposed");
+  function play(frequency, velocity = 1, when = audioContext.currentTime) {
+    if (disposed) throw new Error("Cannot play: instrument has been disposed");
+
+    if (!Number.isFinite(when) || when < 0) {
+      throw new RangeError("when must be a non-negative finite number");
     }
 
     const now = audioContext.currentTime;
@@ -137,32 +139,39 @@ export function createInstrument({
       voice,
       outputGain,
       startedAt: now,
+      startTime: when,
       releasing: false,
       release: settings.release,
     };
 
     activeVoices.push(entry);
 
-    voice.start(now);
+    voice.start(when);
 
     function isActive() {
       return !entry.releasing && activeVoices.includes(entry);
     }
 
-    function stop(when = audioContext.currentTime) {
+    function stop(stopTime = audioContext.currentTime) {
       if (!isActive()) return;
 
       entry.releasing = true;
+      voice.stop(stopTime);
 
-      voice.stop(when);
-      scheduleCleanup(entry, when, entry.release);
+      if (stopTime < entry.startTime) {
+        removeVoice(entry);
+        disconnectVoice(entry);
+        return;
+      }
+
+      scheduleCleanup(entry, stopTime, entry.release);
     }
 
     return {
       stop,
 
       get isPlaying() {
-        return isActive();
+        return isActive() && voice.isPlaying;
       },
 
       setFrequency(nextFrequency) {

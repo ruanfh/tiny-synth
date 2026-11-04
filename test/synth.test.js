@@ -262,23 +262,55 @@ test("new notes inherit the instrument's updated settings", () => {
 });
 
 test("rejects invalid note frequencies", () => {
-  withTestSynth(({ synth }) => {
-    for (const frequency of [0, -440, NaN, Infinity]) {
-      assert.throws(
-        () => synth.instruments.melody.play(frequency),
-        RangeError
-      );
-    }
-  });
+    withTestSynth(({ synth }) => {
+        for (const frequency of [0, -440, NaN, Infinity]) {
+            assert.throws(
+                () => synth.instruments.melody.play(frequency),
+                RangeError
+            );
+        }
+    });
 });
 
 test("rejects invalid velocities", () => {
-  withTestSynth(({ synth }) => {
-    for (const velocity of [-0.1, 1.1, NaN, Infinity]) {
-      assert.throws(
-        () => synth.instruments.melody.play(440, velocity),
-        RangeError
-      );
-    }
-  });
+    withTestSynth(({ synth }) => {
+        for (const velocity of [-0.1, 1.1, NaN, Infinity]) {
+            assert.throws(
+                () => synth.instruments.melody.play(440, velocity),
+                RangeError
+            );
+        }
+    });
+});
+
+test("schedules a note to play in the future", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const note = synth.instruments.melody.play(440, 1, 1);
+
+        assert.equal(note.isPlaying, false);
+        assert.equal(synth.instruments.melody.activeVoiceCount, 1);
+
+        audioContext.currentTime = 1;
+
+        assert.equal(note.isPlaying, true);
+
+        note.stop();
+        synth.dispose();
+        timers.runAll();
+    });
+});
+
+test("cancels a note scheduled for the future", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const note = synth.instruments.melody.play(440, 1, 1);
+
+        audioContext.currentTime = 0.5;
+        note.stop();
+
+        assert.equal(note.isPlaying, false);
+        assert.equal(synth.instruments.melody.activeVoiceCount, 0);
+
+        synth.dispose();
+        timers.runAll();
+    });
 });
