@@ -55,6 +55,7 @@ export function createVoice({
   let stopped = false;
   let cleanupScheduled = false;
   let startTime = null;
+  let stopTime = null;
 
   function cleanup() {
     if (cleanupScheduled) return;
@@ -77,16 +78,18 @@ export function createVoice({
   }
 
   function stop(when = audioContext.currentTime) {
-    if (stopped) return;
-    stopped = true;
+    if (stopped || stopTime !== null) return;
 
     if (!started) {
+      stopped = true;
       cleanup();
       return;
     }
 
-    // The note hasn't started yet: cancel it without a release.
+    stopTime = when;
+
     if (when < startTime) {
+      stopped = true;
       vibrato.stop(when);
       harmonics.stop(when);
       cleanup();
@@ -100,7 +103,11 @@ export function createVoice({
     harmonics.stop(endTime);
 
     const delay = Math.max(0, endTime - audioContext.currentTime);
-    window.setTimeout(cleanup, (delay + 0.1) * 1000);
+
+    window.setTimeout(() => {
+      stopped = true;
+      cleanup();
+    }, (delay + 0.1) * 1000);
   }
 
   return {
@@ -130,7 +137,14 @@ export function createVoice({
     },
 
     get isPlaying() {
-      return started && !stopped && audioContext.currentTime >= startTime;
+      const now = audioContext.currentTime;
+
+      return (
+        started &&
+        !stopped &&
+        now >= startTime &&
+        (stopTime === null || now < stopTime)
+      );
     },
 
     setFrequency(nextFrequency, when = audioContext.currentTime) {
