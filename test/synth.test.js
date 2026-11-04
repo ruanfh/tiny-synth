@@ -314,3 +314,22 @@ test("cancels a note scheduled for the future", () => {
         timers.runAll();
     });
 });
+
+test("stopAll cancels notes scheduled in the future", () => {
+  withTestSynth(({ synth }) => {
+    const melody = synth.instruments.melody;
+
+    const note = melody.play(440, 1, 1);
+
+    assert.equal(note.isPlaying, false);
+    assert.equal(melody.activeVoiceCount, 1);
+
+    const tailDuration = melody.stopAll();
+
+    assert.equal(note.isPlaying, false);
+    assert.equal(melody.activeVoiceCount, 0);
+    assert.equal(tailDuration, 0);
+
+    synth.dispose();
+  });
+});

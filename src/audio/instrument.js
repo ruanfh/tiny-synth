@@ -254,23 +254,27 @@ export function createInstrument({
 
       entry.releasing = true;
       entry.voice.stop(when);
+
+      if (when < entry.startTime) {
+        removeVoice(entry);
+        disconnectVoice(entry);
+        continue;
+      }
+
       scheduleCleanup(entry, when, entry.release);
     }
 
     const latestEndTime = Math.max(
       latestTailEndTime,
-      ...activeVoices.map(
-        (entry) => entry.releasing
+      ...activeVoices.map(entry =>
+        entry.releasing
           ? audioContext.currentTime + entry.release
           : 0
       ),
       when
     );
 
-    return Math.max(
-      0,
-      latestEndTime - audioContext.currentTime
-    );
+    return Math.max(0, latestEndTime - audioContext.currentTime);
   }
 
   function dispose() {
