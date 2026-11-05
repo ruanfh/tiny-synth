@@ -121,7 +121,7 @@ export function createInstrument({
 
     voice.start(entry.startTime);
     if (entry.stopTime !== null) {
-      voice.stop(entry.stopTime);
+      voice.stop(entry.stopTime, entry.stopFadeTime);
 
       if (entry.stopTime <= audioContext.currentTime) {
         entry.releasing = true;
@@ -212,6 +212,7 @@ export function createInstrument({
       releasing: false,
       cancelled: false,
       release: settings.release,
+      stopFadeTime: undefined,
     };
 
     if (when <= audioContext.currentTime) {
@@ -233,6 +234,15 @@ export function createInstrument({
         entry.cancelled = true;
         scheduledNotes.delete(entry);
         return;
+      }
+
+      if (
+        fadeTime !== undefined &&
+        (!Number.isFinite(fadeTime) || fadeTime < 0)
+      ) {
+        throw new RangeError(
+          "fadeTime must be a non-negative finite number"
+        );
       }
 
       entry.stopTime = stopTime;
@@ -350,12 +360,26 @@ export function createInstrument({
   }
 
   function stopAll(when = audioContext.currentTime, fadeTime) {
+    if (!Number.isFinite(when) || when < 0) {
+      throw new RangeError("when must be a non-negative finite number");
+    }
+
+    if (
+      fadeTime !== undefined &&
+      (!Number.isFinite(fadeTime) || fadeTime < 0)
+    ) {
+      throw new RangeError(
+        "fadeTime must be a non-negative finite number"
+      );
+    }
+
     for (const entry of [...scheduledNotes]) {
       if (entry.startTime > when) {
         entry.cancelled = true;
         scheduledNotes.delete(entry);
       } else {
         entry.stopTime = when;
+        entry.stopFadeTime = fadeTime;
       }
     }
 
