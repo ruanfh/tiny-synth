@@ -11,7 +11,10 @@ export function createExample(synth, audioContext) {
     },
 
     stop() {
-      synth.instruments.harmony.stopMany(notes);
+      for (const note of notes) {
+        note.stop(undefined, 0.03);
+      }
+
       notes = [];
     },
   };

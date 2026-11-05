@@ -89,7 +89,7 @@ function stopChord() {
   activeIntervals = [];
 
   for (const note of notes) {
-    note.stop();
+    note.stop(undefined, 0.03);
   }
 }
 
