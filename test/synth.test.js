@@ -392,3 +392,182 @@ test("does not steal voices scheduled to start in the future", () => {
     timers.runPending();
   });
 });
+
+test("scheduled stop uses the configured release", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const melody = synth.instruments.melody;
+
+        melody.setRelease(0.5);
+
+        const note = melody.play(440);
+        note.stop(2);
+
+        const envelopeGain = audioContext.gains[9];
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 2.5
+            )
+        );
+
+        synth.dispose();
+    });
+});
+
+test("note stop uses a custom release duration", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const melody = synth.instruments.melody;
+
+        melody.setRelease(0.5);
+
+        const note = melody.play(440);
+        note.stop(2, 0.03);
+
+        const envelopeGain = audioContext.gains[9];
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 2.03
+            )
+        );
+
+        synth.dispose();
+    });
+});
+
+test("note stop supports zero release duration", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const note = synth.instruments.melody.play(440);
+
+        note.stop(2, 0);
+
+        const envelopeGain = audioContext.gains[9];
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 2
+            )
+        );
+
+        synth.dispose();
+    });
+});
+
+test("does not override an already scheduled stop", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const note = synth.instruments.melody.play(440);
+        const envelopeGain = audioContext.gains[9];
+
+        note.stop(2, 0.5);
+        note.stop(3, 0.1);
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 2.5
+            )
+        );
+
+        assert.equal(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 3.1
+            ),
+            false
+        );
+
+        synth.dispose();
+    });
+});
+
+test("stopAll uses a custom release duration", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const melody = synth.instruments.melody;
+        melody.setRelease(0.5);
+        melody.play(440);
+
+        melody.stopAll(2, 0.03);
+
+        const envelopeGain = audioContext.gains[9];
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 2.03
+            )
+        );
+
+        synth.dispose();
+    });
+});
+
+test("stopAll uses the configured release duration by default", () => {
+    withTestSynth(({ synth, audioContext }) => {
+        const melody = synth.instruments.melody;
+        melody.setRelease(0.5);
+        melody.play(440);
+
+        melody.stopAll(2);
+
+        const envelopeGain = audioContext.gains[9];
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 2.5
+            )
+        );
+
+        synth.dispose();
+    });
+});
+
+test("reuses a voice after its release finishes", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const melody = synth.instruments.melody;
+
+        melody.setRelease(0.5);
+
+        const notes = [
+            melody.play(261.63),
+            melody.play(293.66),
+            melody.play(329.63),
+            melody.play(349.23),
+        ];
+
+        notes[0].stop();
+
+        assert.equal(melody.activeVoiceCount, 4);
+
+        // Advance past the release duration and run cleanup.
+        audioContext.currentTime = 0.6;
+        timers.runPending();
+
+        assert.equal(melody.activeVoiceCount, 3);
+
+        const newNote = melody.play(392);
+
+        assert.equal(newNote.isPlaying, true);
+        assert.equal(melody.activeVoiceCount, 4);
+
+        synth.dispose();
+        timers.runAll();
+    });
+});
