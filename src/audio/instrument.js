@@ -402,17 +402,10 @@ export function createInstrument({
       scheduleCleanup(entry, when, releaseDuration);
     }
 
-    const latestEndTime = Math.max(
-      latestTailEndTime,
-      ...activeVoices.map(entry =>
-        entry.releasing
-          ? audioContext.currentTime + entry.release
-          : 0
-      ),
-      when
+    return Math.max(
+      0,
+      Math.max(latestTailEndTime, when) - audioContext.currentTime
     );
-
-    return Math.max(0, latestEndTime - audioContext.currentTime);
   }
 
   function dispose() {

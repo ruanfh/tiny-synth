@@ -498,7 +498,9 @@ test("stopAll uses a custom release duration", () => {
         melody.setRelease(0.5);
         melody.play(440);
 
-        melody.stopAll(2, 0.03);
+        const tailDuration = melody.stopAll(2, 0.03);
+
+        assert.equal(tailDuration, 2.03);
 
         const envelopeGain = audioContext.gains[9];
 
