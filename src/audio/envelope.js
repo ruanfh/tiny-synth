@@ -40,7 +40,7 @@ export function createEnvelope({
       param.linearRampToValueAtTime(1, when + activeAttack);
     },
 
-    stop(when = audioContext.currentTime) {
+    stop(when = audioContext.currentTime, releaseOverride) {
       if (!started || stopped) return;
       stopped = true;
 
@@ -53,10 +53,12 @@ export function createEnvelope({
           ? 1
           : Math.min(1, elapsed / activeAttack);
 
+      const releaseTime =
+        releaseOverride !== undefined ? releaseOverride : release;
+
       param.cancelScheduledValues(when);
       param.setValueAtTime(level, when);
-
-      param.linearRampToValueAtTime(0, when + release);
+      param.linearRampToValueAtTime(0, when + releaseTime);
     },
 
     setAttack(nextAttack) {

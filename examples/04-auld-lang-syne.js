@@ -119,8 +119,8 @@ export function createExample(synth, audioContext) {
       playbackId++;
       playing = false;
 
-      synth.instruments.melody.stopAll();
-      synth.instruments.harmony.stopAll();
+      synth.instruments.melody.stopAll(audioContext.currentTime, 0.03);
+      synth.instruments.harmony.stopAll(audioContext.currentTime, 0.03);
     },
   };
 }

@@ -121,7 +121,7 @@ export function createInstrument({
 
     voice.start(entry.startTime);
     if (entry.stopTime !== null) {
-      voice.stop(entry.stopTime);
+      voice.stop(entry.stopTime, entry.stopFadeTime);
 
       if (entry.stopTime <= audioContext.currentTime) {
         entry.releasing = true;
@@ -212,6 +212,7 @@ export function createInstrument({
       releasing: false,
       cancelled: false,
       release: settings.release,
+      stopFadeTime: undefined,
     };
 
     if (when <= audioContext.currentTime) {
@@ -221,7 +222,7 @@ export function createInstrument({
       scheduleNote(entry);
     }
 
-    function stop(stopTime = audioContext.currentTime) {
+    function stop(stopTime = audioContext.currentTime, fadeTime) {
       if (entry.cancelled || entry.stopTime !== null) return;
       if (entry.voice && !activeVoices.includes(entry)) return;
 
@@ -235,16 +236,29 @@ export function createInstrument({
         return;
       }
 
+      if (
+        fadeTime !== undefined &&
+        (!Number.isFinite(fadeTime) || fadeTime < 0)
+      ) {
+        throw new RangeError(
+          "fadeTime must be a non-negative finite number"
+        );
+      }
+
       entry.stopTime = stopTime;
+      entry.stopFadeTime = fadeTime;
 
       if (entry.voice) {
-        entry.voice.stop(stopTime);
+        entry.voice.stop(stopTime, fadeTime);
+
+        const releaseDuration =
+          fadeTime !== undefined ? fadeTime : entry.release;
 
         if (stopTime <= audioContext.currentTime) {
           entry.releasing = true;
         }
 
-        scheduleCleanup(entry, stopTime, entry.release);
+        scheduleCleanup(entry, stopTime, releaseDuration);
       }
     }
 
@@ -346,13 +360,27 @@ export function createInstrument({
     }
   }
 
-  function stopAll(when = audioContext.currentTime) {
+  function stopAll(when = audioContext.currentTime, fadeTime) {
+    if (!Number.isFinite(when) || when < 0) {
+      throw new RangeError("when must be a non-negative finite number");
+    }
+
+    if (
+      fadeTime !== undefined &&
+      (!Number.isFinite(fadeTime) || fadeTime < 0)
+    ) {
+      throw new RangeError(
+        "fadeTime must be a non-negative finite number"
+      );
+    }
+
     for (const entry of [...scheduledNotes]) {
       if (entry.startTime > when) {
         entry.cancelled = true;
         scheduledNotes.delete(entry);
       } else {
         entry.stopTime = when;
+        entry.stopFadeTime = fadeTime;
       }
     }
 
@@ -360,7 +388,7 @@ export function createInstrument({
       if (entry.releasing) continue;
 
       entry.releasing = true;
-      entry.voice.stop(when);
+      entry.voice.stop(when, fadeTime);
 
       if (when < entry.startTime) {
         removeVoice(entry);
@@ -368,20 +396,16 @@ export function createInstrument({
         continue;
       }
 
-      scheduleCleanup(entry, when, entry.release);
+      const releaseDuration =
+        fadeTime !== undefined ? fadeTime : entry.release;
+
+      scheduleCleanup(entry, when, releaseDuration);
     }
 
-    const latestEndTime = Math.max(
-      latestTailEndTime,
-      ...activeVoices.map(entry =>
-        entry.releasing
-          ? audioContext.currentTime + entry.release
-          : 0
-      ),
-      when
+    return Math.max(
+      0,
+      Math.max(latestTailEndTime, when) - audioContext.currentTime
     );
-
-    return Math.max(0, latestEndTime - audioContext.currentTime);
   }
 
   function dispose() {

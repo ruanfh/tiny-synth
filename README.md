@@ -100,9 +100,69 @@ const note = synth.instruments.melody.play(440, 0.5);
 
 ### Stop the note
 
+Call `stop()` on a note handle to stop an individual note.
+
 ```js
 note.stop();
 ```
+
+You can optionally specify when the note should stop and how long its release should take:
+
+```js
+note.stop(when, fadeTime);
+```
+
+- `when`: absolute time from the AudioContext clock, in seconds. Defaults to `audioContext.currentTime`.
+- `fadeTime`: release duration in seconds. Defaults to the instrument's configured release time.
+
+A release override applies only to that note:
+
+```js
+// Use the configured release
+note.stop();
+
+// Use a 30 ms release
+note.stop(audioContext.currentTime, 0.03);
+
+// Stop with no release fade (will likely produce clicks)
+note.stop(audioContext.currentTime, 0);
+```
+
+Once a note has a scheduled stop time, subsequent calls to `note.stop()` do not override it.
+
+### Stop many notes
+
+Use `stopMany()` to stop a group of notes returned by `playMany()`:
+
+```js
+const notes = synth.instruments.harmony.playMany([
+  261.63,
+  329.63,
+  392.00,
+]);
+
+synth.instruments.harmony.stopMany(notes);
+```
+
+### Stop all notes
+
+Use `stopAll()` to stop every note belonging to an instrument:
+
+```js
+synth.instruments.melody.stopAll();
+```
+
+It accepts the same timing and release arguments as `note.stop()`:
+
+```js
+// Stop all notes with a 30 ms release
+synth.instruments.melody.stopAll(
+  audioContext.currentTime,
+  0.03
+);
+```
+
+Notes scheduled to start after the specified stop time are cancelled.
 
 ### Schedule a note
 

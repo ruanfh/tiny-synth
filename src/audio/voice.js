@@ -77,37 +77,39 @@ export function createVoice({
     envelope.start(when);
   }
 
-  function stop(when = audioContext.currentTime) {
-    if (stopped || stopTime !== null) return;
+  function stop(when = audioContext.currentTime, fadeTime) {
+    if (stopped) return;
 
-    if (!started) {
-      stopped = true;
-      cleanup();
-      return;
+    if (fadeTime !== undefined) {
+      if (!Number.isFinite(fadeTime) || fadeTime < 0) {
+        throw new RangeError("fadeTime must be a non-negative finite number");
+      }
     }
 
+    stopped = true;
     stopTime = when;
 
     if (when < startTime) {
-      stopped = true;
       vibrato.stop(when);
       harmonics.stop(when);
       cleanup();
       return;
     }
 
-    envelope.stop(when);
+    const releaseDuration =
+      fadeTime !== undefined ? fadeTime : envelope.release;
 
-    const endTime = when + envelope.release;
+    // fadeTime === undefined → normal musical release
+    // fadeTime provided     → abrupt / pause fade
+    envelope.stop(when, fadeTime);
+
+    const endTime = when + releaseDuration;
+
     vibrato.stop(endTime);
     harmonics.stop(endTime);
 
     const delay = Math.max(0, endTime - audioContext.currentTime);
-
-    window.setTimeout(() => {
-      stopped = true;
-      cleanup();
-    }, (delay + 0.1) * 1000);
+    window.setTimeout(cleanup, (delay + 0.1) * 1000);
   }
 
   return {
@@ -141,7 +143,6 @@ export function createVoice({
 
       return (
         started &&
-        !stopped &&
         now >= startTime &&
         (stopTime === null || now < stopTime)
       );

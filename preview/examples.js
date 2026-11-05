@@ -40,7 +40,7 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
         await ensureAudio();
 
         if (!singleNoteExample) {
-            singleNoteExample = createSingleNoteExample(getSynth());
+            singleNoteExample = createSingleNoteExample(getSynth(), getAudioContext());
         }
 
         singleNoteExample.play();
@@ -54,7 +54,7 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
         await ensureAudio();
 
         if (!chordExample) {
-            chordExample = createChordExample(getSynth());
+            chordExample = createChordExample(getSynth(), getAudioContext());
         }
 
         chordExample.play();

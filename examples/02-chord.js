@@ -1,4 +1,4 @@
-export function createExample(synth) {
+export function createExample(synth, audioContext) {
   let notes = [];
 
   return {
@@ -11,7 +11,10 @@ export function createExample(synth) {
     },
 
     stop() {
-      synth.instruments.harmony.stopMany(notes);
+      for (const note of notes) {
+        note.stop(undefined, 0.03);
+      }
+
       notes = [];
     },
   };
