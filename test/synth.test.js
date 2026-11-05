@@ -599,6 +599,34 @@ test("stopAll preserves custom release for scheduled notes", () => {
     });
 });
 
+test("note stop preserves custom release for scheduled notes", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const melody = synth.instruments.melody;
+        melody.setRelease(0.5);
+
+        const note = melody.play(440, 1, 1);
+
+        note.stop(1, 0.03);
+
+        audioContext.currentTime = 1;
+        timers.runPending();
+
+        const envelopeGain = audioContext.gains[9];
+
+        assert.ok(
+            envelopeGain.gain.calls.some(
+                call =>
+                    call.method === "linearRampToValueAtTime" &&
+                    call.value === 0 &&
+                    call.when === 1.03
+            )
+        );
+
+        synth.dispose();
+        timers.runAll();
+    });
+});
+
 test("invalid fadeTime does not change note state", () => {
     withTestSynth(({ synth }) => {
         const note = synth.instruments.melody.play(440);

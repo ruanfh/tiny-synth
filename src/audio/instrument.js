@@ -246,6 +246,7 @@ export function createInstrument({
       }
 
       entry.stopTime = stopTime;
+      entry.stopFadeTime = fadeTime;
 
       if (entry.voice) {
         entry.voice.stop(stopTime, fadeTime);
