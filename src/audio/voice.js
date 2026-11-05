@@ -89,7 +89,9 @@ export function createVoice({
     stopped = true;
     stopTime = when;
 
-    if (!started) {
+    if (when < startTime) {
+      vibrato.stop(when);
+      harmonics.stop(when);
       cleanup();
       return;
     }

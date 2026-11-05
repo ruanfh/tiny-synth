@@ -668,3 +668,26 @@ test("invalid fadeTime does not change notes in stopAll", () => {
         synth.dispose();
     });
 });
+
+test("stops a note before its scheduled start time", () => {
+    withTestSynth(({ synth, audioContext, timers }) => {
+        const note = synth.instruments.melody.play(440, 1, 2);
+
+        // The note has not started yet.
+        assert.equal(note.isPlaying, false);
+
+        // Advance to the scheduled start, allowing the voice to be created.
+        audioContext.currentTime = 2;
+        timers.runPending();
+
+        assert.equal(note.isPlaying, true);
+
+        // Schedule the stop before the audio start time.
+        note.stop(1);
+
+        assert.equal(note.isPlaying, false);
+
+        synth.dispose();
+        timers.runAll();
+    });
+});
