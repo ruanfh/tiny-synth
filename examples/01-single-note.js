@@ -1,4 +1,4 @@
-export function createExample(synth) {
+export function createExample(synth, audioContext) {
   let note = null;
 
   return {
@@ -9,7 +9,7 @@ export function createExample(synth) {
     },
 
     stop() {
-      note?.stop();
+      note?.stop(audioContext.currentTime, 0.03);
       note = null;
     },
   };

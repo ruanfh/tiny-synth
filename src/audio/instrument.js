@@ -221,7 +221,7 @@ export function createInstrument({
       scheduleNote(entry);
     }
 
-    function stop(stopTime = audioContext.currentTime) {
+    function stop(stopTime = audioContext.currentTime, fadeTime) {
       if (entry.cancelled || entry.stopTime !== null) return;
       if (entry.voice && !activeVoices.includes(entry)) return;
 
@@ -238,13 +238,16 @@ export function createInstrument({
       entry.stopTime = stopTime;
 
       if (entry.voice) {
-        entry.voice.stop(stopTime);
+        entry.voice.stop(stopTime, fadeTime);
+
+        const releaseDuration =
+          fadeTime !== undefined ? fadeTime : entry.release;
 
         if (stopTime <= audioContext.currentTime) {
           entry.releasing = true;
         }
 
-        scheduleCleanup(entry, stopTime, entry.release);
+        scheduleCleanup(entry, stopTime, releaseDuration);
       }
     }
 
@@ -346,7 +349,7 @@ export function createInstrument({
     }
   }
 
-  function stopAll(when = audioContext.currentTime) {
+  function stopAll(when = audioContext.currentTime, fadeTime) {
     for (const entry of [...scheduledNotes]) {
       if (entry.startTime > when) {
         entry.cancelled = true;
@@ -360,7 +363,7 @@ export function createInstrument({
       if (entry.releasing) continue;
 
       entry.releasing = true;
-      entry.voice.stop(when);
+      entry.voice.stop(when, fadeTime);
 
       if (when < entry.startTime) {
         removeVoice(entry);
@@ -368,7 +371,10 @@ export function createInstrument({
         continue;
       }
 
-      scheduleCleanup(entry, when, entry.release);
+      const releaseDuration =
+        fadeTime !== undefined ? fadeTime : entry.release;
+
+      scheduleCleanup(entry, when, releaseDuration);
     }
 
     const latestEndTime = Math.max(

@@ -24,8 +24,7 @@ export function createExample(synth, audioContext) {
     },
 
     stop() {
-      notes.forEach(note => note.stop());
-      notes = [];
+      synth.instruments.melody.stopAll(audioContext.currentTime, 0.03);
     },
   };
 }

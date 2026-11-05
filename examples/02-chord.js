@@ -1,4 +1,4 @@
-export function createExample(synth) {
+export function createExample(synth, audioContext) {
   let notes = [];
 
   return {
