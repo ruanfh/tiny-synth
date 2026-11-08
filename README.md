@@ -83,8 +83,15 @@ synth.output.connect(audioContext.destination);
 ### Play a note
 
 There are two instruments available:
+- `synth.instruments.bass` (2-voice polyphony)
 - `synth.instruments.melody` (4-voice polyphony)
 - `synth.instruments.harmony` (8-voice polyphony)
+
+> **Important:** Voice levels are compensated by polyphony:
+>
+> $$
+> \text{output} \approx \frac{\text{bass}}{2} + \frac{\text{melody}}{4} + \frac{\text{harmony}}{8}
+> $$
 
 ```js
 const note = synth.instruments.melody.play(440);
