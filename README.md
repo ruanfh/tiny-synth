@@ -82,7 +82,7 @@ synth.output.connect(audioContext.destination);
 
 ### Play a note
 
-There are two instruments available:
+There are three instruments available:
 - `synth.instruments.bass` (2-voice polyphony)
 - `synth.instruments.melody` (4-voice polyphony)
 - `synth.instruments.harmony` (8-voice polyphony)
