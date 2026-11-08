@@ -50,6 +50,13 @@
             </select>
           </div>
 
+          <div class="instrument-row">
+            <label for="bass-level">
+              Level <output id="bass-level-value">25</output>%
+            </label>
+            <input id="bass-level" type="range" min="0" max="100" value="25" step="1" />
+          </div>
+
           <div class="example-actions">
             <button id="bass-play" type="button">Play</button>
             <button id="bass-stop" type="button">Stop</button>
@@ -129,6 +136,13 @@
               <option value="783.99">G5</option>
               <option value="880.00">A5</option>
             </select>
+          </div>
+
+          <div class="instrument-row">
+            <label for="melody-level">
+              Level <output id="melody-level-value">50</output>%
+            </label>
+            <input id="melody-level" type="range" min="0" max="100" value="50" step="1" />
           </div>
 
           <div class="example-actions">
@@ -219,6 +233,13 @@
               <option value="sus2">Suspended 2</option>
               <option value="sus4">Suspended 4</option>
             </select>
+          </div>
+
+          <div class="instrument-row">
+            <label for="harmony-level">
+              Level <output id="harmony-level-value">100</output>%
+            </label>
+            <input id="harmony-level" type="range" min="0" max="100" value="100" step="1" />
           </div>
 
           <div class="example-actions">

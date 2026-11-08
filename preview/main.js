@@ -47,6 +47,9 @@ function createInstrumentUI(name, options = {}) {
   const releaseInput = document.querySelector(`#${prefix}-release`);
   const releaseValue = document.querySelector(`#${prefix}-release-value`);
 
+  const levelInput = document.querySelector(`#${prefix}-level`);
+  const levelValue = document.querySelector(`#${prefix}-level-value`);
+
   let activeNotes = [];
   let activeIntervals = [];
 
@@ -67,6 +70,20 @@ function createInstrumentUI(name, options = {}) {
     instrument.setVibratoRate(Number(rateInput.value));
     instrument.setAttack(Number(attackInput.value));
     instrument.setRelease(Number(releaseInput.value));
+    updateLevel();
+  }
+
+  function updateLevel() {
+    const instrument = getInstrument();
+    if (!instrument || !audioContext) return;
+
+    const level = Number(levelInput.value) / 100;
+
+    instrument.output.gain.setTargetAtTime(
+      level,
+      audioContext.currentTime,
+      0.015
+    );
   }
 
   function stop() {
@@ -217,4 +234,9 @@ window.addEventListener("pagehide", () => {
   harmonyUI.stop();
   examples.dispose();
   synth?.dispose();
+});
+
+levelInput.addEventListener("input", () => {
+  levelValue.textContent = levelInput.value;
+  updateLevel();
 });
