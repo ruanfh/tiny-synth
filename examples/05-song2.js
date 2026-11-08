@@ -94,7 +94,7 @@ export function createExample(synth, audioContext) {
         scheduleNote(
           synth.instruments.bass,
           freq,
-          0.5,
+          0.8,
           barStart + i * beat,
           beat * 0.92
         );
@@ -105,7 +105,7 @@ export function createExample(synth, audioContext) {
         scheduleNote(
           synth.instruments.harmony,
           freq,
-          0.7,
+          0.3,
           barStart,
           beat * 3.7
         );
@@ -116,7 +116,7 @@ export function createExample(synth, audioContext) {
         scheduleNote(
           synth.instruments.melody,
           freq,
-          0.4,
+          1,
           barStart + offset * beat,
           dur * beat * 0.9
         );
