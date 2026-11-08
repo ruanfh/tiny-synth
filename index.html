@@ -15,119 +15,298 @@
   <main class="preview">
     <header>
       <p class="eyebrow">TINY SYNTH</p>
-      <h1>Chord voice</h1>
-      <p class="intro">Explore additive synthesis with simple chords.</p>
+      <h1>Three instruments</h1>
+      <p class="intro">
+        Bass, melody and harmony — each with its own voice and polyphony.
+      </p>
     </header>
 
     <section class="panel">
-      <div class="frequency-control">
-        <label for="frequency">Root frequency</label>
-        <div class="value"><span id="frequency-value">220</span> Hz</div>
-        <input id="frequency" type="range" min="55" max="440" value="220" step="1" />
+      <div class="instruments">
+
+        <!-- ========== BASS ========== -->
+        <div class="instrument" id="bass-panel">
+          <div class="section-heading">
+            <h2>Bass</h2>
+            <span>Low voice · 3-note polyphony</span>
+          </div>
+
+          <div class="instrument-row">
+            <label for="bass-note">Note</label>
+            <select id="bass-note">
+              <option value="82.41">E2</option>
+              <option value="87.31">F2</option>
+              <option value="92.50">F♯2</option>
+              <option value="98.00">G2</option>
+              <option value="103.83">G♯2</option>
+              <option value="110.00" selected>A2</option>
+              <option value="116.54">A♯2</option>
+              <option value="123.47">B2</option>
+              <option value="130.81">C3</option>
+              <option value="138.59">C♯3</option>
+              <option value="146.83">D3</option>
+              <option value="155.56">D♯3</option>
+              <option value="164.81">E3</option>
+            </select>
+          </div>
+
+          <div class="instrument-row">
+            <label for="bass-level">
+              Level <output id="bass-level-value">25</output>%
+            </label>
+            <input id="bass-level" type="range" min="0" max="100" value="25" step="1" />
+          </div>
+
+          <div class="example-actions">
+            <button id="bass-play" type="button">Play</button>
+            <button id="bass-stop" type="button">Stop</button>
+          </div>
+
+          <details class="instrument-tone">
+            <summary>Tone</summary>
+
+            <div class="tone-group">
+              <span class="tone-label">Harmonics</span>
+              <div class="harmonic compact">
+                <label>1</label>
+                <input id="bass-harmonic-0" type="range" min="0" max="1" step="0.001" value="1" />
+                <output id="bass-harmonic-value-0">1.00</output>
+              </div>
+              <div class="harmonic compact">
+                <label>2</label>
+                <input id="bass-harmonic-1" type="range" min="0" max="1" step="0.001" value="0.35" />
+                <output id="bass-harmonic-value-1">0.35</output>
+              </div>
+              <div class="harmonic compact">
+                <label>3</label>
+                <input id="bass-harmonic-2" type="range" min="0" max="1" step="0.001" value="0.12" />
+                <output id="bass-harmonic-value-2">0.12</output>
+              </div>
+              <div class="harmonic compact">
+                <label>4</label>
+                <input id="bass-harmonic-3" type="range" min="0" max="1" step="0.001" value="0.04" />
+                <output id="bass-harmonic-value-3">0.04</output>
+              </div>
+              <div class="harmonic compact">
+                <label>5</label>
+                <input id="bass-harmonic-4" type="range" min="0" max="1" step="0.001" value="0" />
+                <output id="bass-harmonic-value-4">0.00</output>
+              </div>
+            </div>
+
+            <div class="tone-group">
+              <span class="tone-label">Vibrato</span>
+              <label>Depth <output id="bass-vibrato-depth-value">4</output> ¢</label>
+              <input id="bass-vibrato-depth" type="range" min="0" max="100" value="4" step="1" />
+              <label>Rate <output id="bass-vibrato-rate-value">2.0</output> Hz</label>
+              <input id="bass-vibrato-rate" type="range" min="1" max="12" value="2" step="0.1" />
+            </div>
+
+            <div class="tone-group">
+              <span class="tone-label">Envelope</span>
+              <label>Attack <output id="bass-attack-value">0.08</output> s</label>
+              <input id="bass-attack" type="range" min="0" max="2" value="0.08" step="0.01" />
+              <label>Release <output id="bass-release-value">0.30</output> s</label>
+              <input id="bass-release" type="range" min="0" max="3" value="0.3" step="0.01" />
+            </div>
+          </details>
+        </div>
+
+        <!-- ========== MELODY ========== -->
+        <div class="instrument" id="melody-panel">
+          <div class="section-heading">
+            <h2>Melody</h2>
+            <span>Lead voice · 4-note polyphony</span>
+          </div>
+
+          <div class="instrument-row">
+            <label for="melody-note">Note</label>
+            <select id="melody-note">
+              <option value="261.63">C4</option>
+              <option value="293.66">D4</option>
+              <option value="329.63">E4</option>
+              <option value="349.23">F4</option>
+              <option value="392.00">G4</option>
+              <option value="440.00" selected>A4</option>
+              <option value="493.88">B4</option>
+              <option value="523.25">C5</option>
+              <option value="587.33">D5</option>
+              <option value="659.25">E5</option>
+              <option value="698.46">F5</option>
+              <option value="783.99">G5</option>
+              <option value="880.00">A5</option>
+            </select>
+          </div>
+
+          <div class="instrument-row">
+            <label for="melody-level">
+              Level <output id="melody-level-value">50</output>%
+            </label>
+            <input id="melody-level" type="range" min="0" max="100" value="50" step="1" />
+          </div>
+
+          <div class="example-actions">
+            <button id="melody-play" type="button">Play</button>
+            <button id="melody-stop" type="button">Stop</button>
+          </div>
+
+          <details class="instrument-tone">
+            <summary>Tone</summary>
+
+            <div class="tone-group">
+              <span class="tone-label">Harmonics</span>
+              <div class="harmonic compact">
+                <label>1</label>
+                <input id="melody-harmonic-0" type="range" min="0" max="1" step="0.001" value="1" />
+                <output id="melody-harmonic-value-0">1.00</output>
+              </div>
+              <div class="harmonic compact">
+                <label>2</label>
+                <input id="melody-harmonic-1" type="range" min="0" max="1" step="0.001" value="0.20" />
+                <output id="melody-harmonic-value-1">0.20</output>
+              </div>
+              <div class="harmonic compact">
+                <label>3</label>
+                <input id="melody-harmonic-2" type="range" min="0" max="1" step="0.001" value="0.10" />
+                <output id="melody-harmonic-value-2">0.10</output>
+              </div>
+              <div class="harmonic compact">
+                <label>4</label>
+                <input id="melody-harmonic-3" type="range" min="0" max="1" step="0.001" value="0.05" />
+                <output id="melody-harmonic-value-3">0.05</output>
+              </div>
+              <div class="harmonic compact">
+                <label>5</label>
+                <input id="melody-harmonic-4" type="range" min="0" max="1" step="0.001" value="0.025" />
+                <output id="melody-harmonic-value-4">0.03</output>
+              </div>
+            </div>
+
+            <div class="tone-group">
+              <span class="tone-label">Vibrato</span>
+              <label>Depth <output id="melody-vibrato-depth-value">20</output> ¢</label>
+              <input id="melody-vibrato-depth" type="range" min="0" max="100" value="20" step="1" />
+              <label>Rate <output id="melody-vibrato-rate-value">5.0</output> Hz</label>
+              <input id="melody-vibrato-rate" type="range" min="1" max="12" value="5" step="0.1" />
+            </div>
+
+            <div class="tone-group">
+              <span class="tone-label">Envelope</span>
+              <label>Attack <output id="melody-attack-value">0.10</output> s</label>
+              <input id="melody-attack" type="range" min="0" max="2" value="0.1" step="0.01" />
+              <label>Release <output id="melody-release-value">0.20</output> s</label>
+              <input id="melody-release" type="range" min="0" max="3" value="0.2" step="0.01" />
+            </div>
+          </details>
+        </div>
+
+        <!-- ========== HARMONY ========== -->
+        <div class="instrument" id="harmony-panel">
+          <div class="section-heading">
+            <h2>Harmony</h2>
+            <span>Chord voice · 8-note polyphony</span>
+          </div>
+
+          <div class="instrument-row">
+            <label for="harmony-root">Root</label>
+            <select id="harmony-root">
+              <option value="130.81">C3</option>
+              <option value="146.83">D3</option>
+              <option value="164.81">E3</option>
+              <option value="174.61">F3</option>
+              <option value="196.00">G3</option>
+              <option value="220.00" selected>A3</option>
+              <option value="246.94">B3</option>
+              <option value="261.63">C4</option>
+              <option value="293.66">D4</option>
+              <option value="329.63">E4</option>
+            </select>
+          </div>
+
+          <div class="instrument-row">
+            <label for="harmony-chord">Chord</label>
+            <select id="harmony-chord">
+              <option value="monotone">Single note</option>
+              <option value="major">Major</option>
+              <option value="minor" selected>Minor</option>
+              <option value="diminished">Diminished</option>
+              <option value="sus2">Suspended 2</option>
+              <option value="sus4">Suspended 4</option>
+            </select>
+          </div>
+
+          <div class="instrument-row">
+            <label for="harmony-level">
+              Level <output id="harmony-level-value">100</output>%
+            </label>
+            <input id="harmony-level" type="range" min="0" max="100" value="100" step="1" />
+          </div>
+
+          <div class="example-actions">
+            <button id="harmony-play" type="button">Play</button>
+            <button id="harmony-stop" type="button">Stop</button>
+          </div>
+
+          <details class="instrument-tone">
+            <summary>Tone</summary>
+
+            <div class="tone-group">
+              <span class="tone-label">Harmonics</span>
+              <div class="harmonic compact">
+                <label>1</label>
+                <input id="harmony-harmonic-0" type="range" min="0" max="1" step="0.001" value="1" />
+                <output id="harmony-harmonic-value-0">1.00</output>
+              </div>
+              <div class="harmonic compact">
+                <label>2</label>
+                <input id="harmony-harmonic-1" type="range" min="0" max="1" step="0.001" value="0.50" />
+                <output id="harmony-harmonic-value-1">0.50</output>
+              </div>
+              <div class="harmonic compact">
+                <label>3</label>
+                <input id="harmony-harmonic-2" type="range" min="0" max="1" step="0.001" value="0.25" />
+                <output id="harmony-harmonic-value-2">0.25</output>
+              </div>
+              <div class="harmonic compact">
+                <label>4</label>
+                <input id="harmony-harmonic-3" type="range" min="0" max="1" step="0.001" value="0.125" />
+                <output id="harmony-harmonic-value-3">0.13</output>
+              </div>
+              <div class="harmonic compact">
+                <label>5</label>
+                <input id="harmony-harmonic-4" type="range" min="0" max="1" step="0.001" value="0.0625" />
+                <output id="harmony-harmonic-value-4">0.06</output>
+              </div>
+            </div>
+
+            <div class="tone-group">
+              <span class="tone-label">Vibrato</span>
+              <label>Depth <output id="harmony-vibrato-depth-value">15</output> ¢</label>
+              <input id="harmony-vibrato-depth" type="range" min="0" max="100" value="15" step="1" />
+              <label>Rate <output id="harmony-vibrato-rate-value">1.0</output> Hz</label>
+              <input id="harmony-vibrato-rate" type="range" min="1" max="12" value="1" step="0.1" />
+            </div>
+
+            <div class="tone-group">
+              <span class="tone-label">Envelope</span>
+              <label>Attack <output id="harmony-attack-value">0.10</output> s</label>
+              <input id="harmony-attack" type="range" min="0" max="2" value="0.1" step="0.01" />
+              <label>Release <output id="harmony-release-value">0.20</output> s</label>
+              <input id="harmony-release" type="range" min="0" max="3" value="0.2" step="0.01" />
+            </div>
+          </details>
+        </div>
       </div>
 
-      <div class="chord-control">
-        <label for="chord">Chord type</label>
-        <select id="chord">
-          <option value="monotone">Single note</option>
-          <option value="major">Major</option>
-          <option value="minor">Minor</option>
-          <option value="diminished">Diminished</option>
-          <option value="sus2">Suspended 2</option>
-          <option value="sus4">Suspended 4</option>
-        </select>
-      </div>
-
-      <div class="harmonics">
-        <div class="section-heading">
-          <h2>Harmonics</h2>
-          <span>Relative amplitudes</span>
-        </div>
-
-        <div class="harmonic">
-          <label for="harmonic-0">
-            <span>1st partial</span>
-            <output id="harmonic-value-0">1.000</output>
-          </label>
-          <input id="harmonic-0" type="range" min="0" max="1" step="0.001" value="1" />
-        </div>
-
-        <div class="harmonic">
-          <label for="harmonic-1">
-            <span>2nd partial</span>
-            <output id="harmonic-value-1">0.500</output>
-          </label>
-          <input id="harmonic-1" type="range" min="0" max="1" step="0.001" value="0.5" />
-        </div>
-
-        <div class="harmonic">
-          <label for="harmonic-2">
-            <span>3rd partial</span>
-            <output id="harmonic-value-2">0.250</output>
-          </label>
-          <input id="harmonic-2" type="range" min="0" max="1" step="0.001" value="0.25" />
-        </div>
-
-        <div class="harmonic">
-          <label for="harmonic-3">
-            <span>4th partial</span>
-            <output id="harmonic-value-3">0.125</output>
-          </label>
-          <input id="harmonic-3" type="range" min="0" max="1" step="0.001" value="0.125" />
-        </div>
-
-        <div class="harmonic">
-          <label for="harmonic-4">
-            <span>5th partial</span>
-            <output id="harmonic-value-4">0.063</output>
-          </label>
-          <input id="harmonic-4" type="range" min="0" max="1" step="0.001" value="0.0625" />
-        </div>
-      </div>
-
-      <div class="vibrato">
-        <div class="section-heading">
-          <h2>Vibrato</h2>
-          <span>Pitch modulation</span>
-        </div>
-
-        <label for="vibrato-depth">
-          Depth <output id="vibrato-depth-value">0</output> cents
-        </label>
-        <input id="vibrato-depth" type="range" min="0" max="100" value="0" step="1" />
-
-        <label for="vibrato-rate">
-          Rate <output id="vibrato-rate-value">5.0</output> Hz
-        </label>
-        <input id="vibrato-rate" type="range" min="1" max="12" value="5" step="0.1" />
-      </div>
-
-      <div class="envelope">
-        <div class="section-heading">
-          <h2>Envelope</h2>
-          <span>Amplitude shaping</span>
-        </div>
-
-        <label for="attack">
-          Attack <output id="attack-value">0.02</output> s
-        </label>
-        <input id="attack" type="range" min="0" max="2" value="0.02" step="0.01" />
-
-        <label for="release">
-          Release <output id="release-value">0.20</output> s
-        </label>
-        <input id="release" type="range" min="0" max="3" value="0.2" step="0.01" />
+      <div class="global-actions">
+        <button id="play-all" type="button">Play all</button>
+        <button id="stop-all" class="secondary" type="button">Stop all</button>
       </div>
 
       <div class="frequency-control">
         <label for="master-level">Master level</label>
         <div class="value"><span id="master-level-value">50</span>%</div>
         <input id="master-level" type="range" min="0" max="100" value="50" step="1" />
-      </div>
-
-      <div class="actions">
-        <button id="play" type="button">Play chord</button>
-        <button id="stop" class="secondary" type="button">Stop</button>
       </div>
     </section>
 
@@ -183,7 +362,7 @@
 
       <article class="example" id="song-example">
         <h3>04. Auld Lang Syne</h3>
-        <p>A waltz-style accompaniment using scheduled bass and chords.</p>
+        <p>A waltz-style accompaniment using scheduled chords.</p>
 
         <div class="example-actions">
           <button id="song-play" type="button">Play</button>
@@ -195,10 +374,25 @@
           <pre><code id="song-source">Loading source...</code></pre>
         </details>
       </article>
+
+      <article class="example" id="song2-example">
+        <h3>05. Demonstration loop</h3>
+        <p>A demo loop with walking bass.</p>
+
+        <div class="example-actions">
+          <button id="song2-play" type="button">Play</button>
+          <button id="song2-stop" type="button">Stop</button>
+        </div>
+
+        <details>
+          <summary>View source</summary>
+          <pre><code id="song2-source">Loading source...</code></pre>
+        </details>
+      </article>
     </section>
 
     <footer>
-      <p>Harmony voice · Five sine partials per note · Native Web Audio</p>
+      <p>Bass · Melody · Harmony · Five sine partials per note · Native Web Audio</p>
     </footer>
   </main>
 

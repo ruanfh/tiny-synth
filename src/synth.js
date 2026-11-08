@@ -1,10 +1,9 @@
-
 import { createInstrument } from "./audio/instrument.js";
 
 const CLEANUP_MARGIN = 0.15;
 
 /**
- * Create a synthesizer with melody and harmony instruments.
+ * Create a synthesizer with bass, melody and harmony instruments.
  *
  * The host owns the AudioContext and the connection to destination.
  */
@@ -15,11 +14,26 @@ export function createSynth({ audioContext }) {
 
   const output = audioContext.createGain();
 
+  const bassBus = audioContext.createGain();
   const melodyBus = audioContext.createGain();
   const harmonyBus = audioContext.createGain();
 
+  bassBus.connect(output);
   melodyBus.connect(output);
   harmonyBus.connect(output);
+
+  const bass = createInstrument({
+    audioContext,
+    output: bassBus,
+    polyphony: 2,
+    voiceDefaults: {
+      amplitudes: [1, 0.27, 0.18, 0.09, 0.05],
+      attack: 0.08,
+      release: 0.3,
+      vibratoDepth: 4,
+      vibratoRate: 2,
+    },
+  });
 
   const melody = createInstrument({
     audioContext,
@@ -53,12 +67,14 @@ export function createSynth({ audioContext }) {
     if (disposed) return;
     disposed = true;
 
+    const bassTail = bass.dispose();
     const melodyTail = melody.dispose();
     const harmonyTail = harmony.dispose();
 
-    const tailDuration = Math.max(melodyTail, harmonyTail);
+    const tailDuration = Math.max(bassTail, melodyTail, harmonyTail);
 
     window.setTimeout(() => {
+      bassBus.disconnect();
       melodyBus.disconnect();
       harmonyBus.disconnect();
       output.disconnect();
@@ -69,6 +85,7 @@ export function createSynth({ audioContext }) {
     output,
 
     instruments: {
+      bass,
       melody,
       harmony,
     },

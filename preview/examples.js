@@ -14,11 +14,16 @@ import {
     createExample as createSongExample,
 } from "../examples/04-auld-lang-syne.js"
 
+import {
+    createExample as createSong2Example,
+} from "../examples/05-song2.js"
+
 export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
     let singleNoteExample;
     let chordExample;
     let arpeggioExample;
     let songExample;
+    let song2Example;
 
     const singleNotePlay = document.querySelector("#example-play");
     const singleNoteStop = document.querySelector("#example-stop");
@@ -35,6 +40,10 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
     const songPlay = document.querySelector("#song-play");
     const songStop = document.querySelector("#song-stop");
     const songSource = document.querySelector("#song-source");
+
+    const song2Play = document.querySelector("#song2-play");
+    const song2Stop = document.querySelector("#song2-stop");
+    const song2Source = document.querySelector("#song2-source");
 
     singleNotePlay.addEventListener("click", async () => {
         await ensureAudio();
@@ -92,6 +101,20 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
         songExample?.stop();
     });
 
+    song2Play.addEventListener("click", async () => {
+        await ensureAudio();
+
+        if (!song2Example) {
+            song2Example = createSong2Example(getSynth(), getAudioContext());
+        }
+
+        song2Example.play();
+    });
+
+    song2Stop.addEventListener("click", () => {
+        song2Example?.stop();
+    });
+
     loadSource(
         "../examples/01-single-note.js",
         singleNoteSource
@@ -110,6 +133,11 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
     loadSource(
         "../examples/04-auld-lang-syne.js",
         songSource
+    );
+
+    loadSource(
+        "../examples/05-song2.js",
+        song2Source
     );
 
     function loadSource(path, element) {
@@ -137,6 +165,7 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
             chordExample?.stop();
             arpeggioExample?.stop();
             songExample?.stop();
+            song2Example?.stop();
         },
     };
 }

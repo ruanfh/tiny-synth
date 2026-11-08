@@ -31,6 +31,7 @@ test("creates a synth, plays a note, stops it and disposes", () => {
     withTestSynth(({ synth, timers }) => {
         assert.equal(synth.disposed, false);
         assert.ok(synth.output);
+        assert.ok(synth.instruments.bass);
         assert.ok(synth.instruments.melody);
         assert.ok(synth.instruments.harmony);
 
@@ -216,11 +217,11 @@ test("new notes inherit the instrument's updated settings", () => {
         assert.equal(oscillators[5].frequency.value, 7);
 
         // Vibrato depth is applied to its gain node.
-        const vibratoGain = audioContext.gains[11];
+        const vibratoGain = audioContext.gains[12];
         assert.equal(vibratoGain.gain.value, 30);
 
         // Verify that updated amplitudes are normalized.
-        const harmonicGains = audioContext.gains.slice(4, 9);
+        const harmonicGains = audioContext.gains.slice(5, 10);
 
         const sum = amplitudes.reduce(
             (total, value) => total + value,
@@ -237,7 +238,7 @@ test("new notes inherit the instrument's updated settings", () => {
         });
 
         // Verify the configured attack.
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -401,7 +402,7 @@ test("scheduled stop uses the configured release", () => {
         const note = melody.play(440);
         note.stop(2);
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -425,7 +426,7 @@ test("note stop uses a custom release duration", () => {
         const note = melody.play(440);
         note.stop(2, 0.03);
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -446,7 +447,7 @@ test("note stop supports zero release duration", () => {
 
         note.stop(2, 0);
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -464,7 +465,7 @@ test("note stop supports zero release duration", () => {
 test("does not override an already scheduled stop", () => {
     withTestSynth(({ synth, audioContext }) => {
         const note = synth.instruments.melody.play(440);
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         note.stop(2, 0.5);
         note.stop(3, 0.1);
@@ -502,7 +503,7 @@ test("stopAll uses a custom release duration", () => {
 
         assert.equal(tailDuration, 2.03);
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -525,7 +526,7 @@ test("stopAll uses the configured release duration by default", () => {
 
         melody.stopAll(2);
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -585,7 +586,7 @@ test("stopAll preserves custom release for scheduled notes", () => {
         audioContext.currentTime = 1;
         timers.runPending();
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
@@ -613,7 +614,7 @@ test("note stop preserves custom release for scheduled notes", () => {
         audioContext.currentTime = 1;
         timers.runPending();
 
-        const envelopeGain = audioContext.gains[9];
+        const envelopeGain = audioContext.gains[10];
 
         assert.ok(
             envelopeGain.gain.calls.some(
