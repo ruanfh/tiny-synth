@@ -18,6 +18,7 @@ const stopAllButton = document.querySelector("#stop-all");
 
 let audioContext;
 let synth;
+let exampleSynth;
 
 // ---------- Per-instrument state ----------
 
@@ -98,6 +99,7 @@ function createInstrumentUI(name, options = {}) {
     await ensureAudio();
     if (synth.disposed) return;
 
+    examples.stopAll();
     stop();
     updateMasterLevel();
     configure();
@@ -107,16 +109,14 @@ function createInstrumentUI(name, options = {}) {
 
     if (options.chord && chordInput) {
       const intervals = chordIntervals[chordInput.value];
-      const velocity = 0.35 / Math.sqrt(intervals.length);
 
       for (const semitones of intervals) {
         const frequency = rootFrequency * Math.pow(2, semitones / 12);
         activeIntervals.push(semitones);
-        activeNotes.push(instrument.play(frequency, velocity));
+        activeNotes.push(instrument.play(frequency));
       }
     } else {
-      const velocity = options.velocity ?? 0.75;
-      activeNotes.push(instrument.play(rootFrequency, velocity));
+      activeNotes.push(instrument.play(rootFrequency));
     }
   }
 
@@ -168,6 +168,11 @@ function createInstrumentUI(name, options = {}) {
     getInstrument()?.setRelease(Number(releaseInput.value));
   });
 
+  levelInput.addEventListener("input", () => {
+    levelValue.textContent = levelInput.value;
+    updateLevel();
+  });
+
   playButton.addEventListener("click", play);
   stopButton.addEventListener("click", stop);
 
@@ -177,8 +182,14 @@ function createInstrumentUI(name, options = {}) {
 async function ensureAudio() {
   if (!audioContext) {
     audioContext = new AudioContext();
+
+    // Live panel synth
     synth = createSynth({ audioContext });
     synth.output.connect(audioContext.destination);
+
+    // Separate synth for examples – always starts with library defaults
+    exampleSynth = createSynth({ audioContext });
+    exampleSynth.output.connect(audioContext.destination);
 
     bassUI.configure();
     melodyUI.configure();
@@ -201,14 +212,19 @@ function updateMasterLevel() {
   );
 }
 
-const bassUI = createInstrumentUI("bass", { velocity: 0.85 });
-const melodyUI = createInstrumentUI("melody", { velocity: 0.7 });
+const bassUI = createInstrumentUI("bass");
+const melodyUI = createInstrumentUI("melody");
 const harmonyUI = createInstrumentUI("harmony", { chord: true });
 
 const examples = setupExamples({
   ensureAudio,
-  getSynth: () => synth,
+  getExampleSynth: () => exampleSynth,
   getAudioContext: () => audioContext,
+  stopOthers() {
+    bassUI.stop();
+    melodyUI.stop();
+    harmonyUI.stop();
+  },
 });
 
 masterInput.addEventListener("input", () => {
@@ -217,6 +233,7 @@ masterInput.addEventListener("input", () => {
 });
 
 playAllButton.addEventListener("click", async () => {
+  examples.stopAll();          // silence examples first
   await bassUI.play();
   await melodyUI.play();
   await harmonyUI.play();
@@ -226,6 +243,7 @@ stopAllButton.addEventListener("click", () => {
   bassUI.stop();
   melodyUI.stop();
   harmonyUI.stop();
+  examples.stopAll();
 });
 
 window.addEventListener("pagehide", () => {
@@ -234,9 +252,5 @@ window.addEventListener("pagehide", () => {
   harmonyUI.stop();
   examples.dispose();
   synth?.dispose();
-});
-
-levelInput.addEventListener("input", () => {
-  levelValue.textContent = levelInput.value;
-  updateLevel();
+  exampleSynth?.dispose();
 });
