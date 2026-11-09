@@ -12,13 +12,13 @@ import {
 
 import {
     createExample as createSongExample,
-} from "../examples/04-auld-lang-syne.js"
+} from "../examples/04-auld-lang-syne.js";
 
 import {
     createExample as createSong2Example,
-} from "../examples/05-song2.js"
+} from "../examples/05-song2.js";
 
-export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
+export function setupExamples({ ensureAudio, getSynth, getAudioContext, stopOthers }) {
     let singleNoteExample;
     let chordExample;
     let arpeggioExample;
@@ -45,108 +45,82 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
     const song2Stop = document.querySelector("#song2-stop");
     const song2Source = document.querySelector("#song2-source");
 
-    singleNotePlay.addEventListener("click", async () => {
-        await ensureAudio();
-
-        if (!singleNoteExample) {
-            singleNoteExample = createSingleNoteExample(getSynth(), getAudioContext());
-        }
-
-        singleNoteExample.play();
-    });
-
-    singleNoteStop.addEventListener("click", () => {
+    function stopAllExamples() {
         singleNoteExample?.stop();
-    });
-
-    chordPlay.addEventListener("click", async () => {
-        await ensureAudio();
-
-        if (!chordExample) {
-            chordExample = createChordExample(getSynth(), getAudioContext());
-        }
-
-        chordExample.play();
-    });
-
-    chordStop.addEventListener("click", () => {
         chordExample?.stop();
-    });
-
-    arpeggioPlay.addEventListener("click", async () => {
-        await ensureAudio();
-
-        if (!arpeggioExample) {
-            arpeggioExample = createArpeggioExample(getSynth(), getAudioContext());
-        }
-
-        arpeggioExample.play();
-    });
-
-    arpeggioStop.addEventListener("click", () => {
         arpeggioExample?.stop();
-    });
-
-    songPlay.addEventListener("click", async () => {
-        await ensureAudio();
-
-        if (!songExample) {
-            songExample = createSongExample(getSynth(), getAudioContext());
-        }
-
-        songExample.play();
-    });
-
-    songStop.addEventListener("click", () => {
         songExample?.stop();
-    });
+        song2Example?.stop();
+    }
 
-    song2Play.addEventListener("click", async () => {
+    async function startExample(createFn, getExample, setExample) {
         await ensureAudio();
+        stopOthers();          // stops main instruments + other examples
+        stopAllExamples();
 
-        if (!song2Example) {
-            song2Example = createSong2Example(getSynth(), getAudioContext());
+        if (!getExample()) {
+            const ex = createFn(getSynth(), getAudioContext());
+            setExample(ex);
         }
 
-        song2Example.play();
-    });
+        getExample().play();
+    }
 
-    song2Stop.addEventListener("click", () => {
-        song2Example?.stop();
-    });
-
-    loadSource(
-        "../examples/01-single-note.js",
-        singleNoteSource
+    singleNotePlay.addEventListener("click", () =>
+        startExample(
+            createSingleNoteExample,
+            () => singleNoteExample,
+            (ex) => { singleNoteExample = ex; }
+        )
     );
+    singleNoteStop.addEventListener("click", () => singleNoteExample?.stop());
 
-    loadSource(
-        "../examples/02-chord.js",
-        chordSource
+    chordPlay.addEventListener("click", () =>
+        startExample(
+            createChordExample,
+            () => chordExample,
+            (ex) => { chordExample = ex; }
+        )
     );
+    chordStop.addEventListener("click", () => chordExample?.stop());
 
-    loadSource(
-        "../examples/03-arpeggio.js",
-        arpeggioSource
+    arpeggioPlay.addEventListener("click", () =>
+        startExample(
+            createArpeggioExample,
+            () => arpeggioExample,
+            (ex) => { arpeggioExample = ex; }
+        )
     );
+    arpeggioStop.addEventListener("click", () => arpeggioExample?.stop());
 
-    loadSource(
-        "../examples/04-auld-lang-syne.js",
-        songSource
+    songPlay.addEventListener("click", () =>
+        startExample(
+            createSongExample,
+            () => songExample,
+            (ex) => { songExample = ex; }
+        )
     );
+    songStop.addEventListener("click", () => songExample?.stop());
 
-    loadSource(
-        "../examples/05-song2.js",
-        song2Source
+    song2Play.addEventListener("click", () =>
+        startExample(
+            createSong2Example,
+            () => song2Example,
+            (ex) => { song2Example = ex; }
+        )
     );
+    song2Stop.addEventListener("click", () => song2Example?.stop());
+
+    loadSource("../examples/01-single-note.js", singleNoteSource);
+    loadSource("../examples/02-chord.js", chordSource);
+    loadSource("../examples/03-arpeggio.js", arpeggioSource);
+    loadSource("../examples/04-auld-lang-syne.js", songSource);
+    loadSource("../examples/05-song2.js", song2Source);
 
     function loadSource(path, element) {
         fetch(new URL(path, import.meta.url))
             .then(response => {
-                if (!response.ok) {
-                    throw new Error("Could not load example source");
-                }
-
+                if (!response.ok) throw new Error("Could not load example source");
                 return response.text();
             })
             .then(source => {
@@ -160,12 +134,11 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext }) {
     }
 
     return {
+        stopAll() {
+            stopAllExamples();
+        },
         dispose() {
-            singleNoteExample?.stop();
-            chordExample?.stop();
-            arpeggioExample?.stop();
-            songExample?.stop();
-            song2Example?.stop();
+            stopAllExamples();
         },
     };
 }

@@ -98,6 +98,7 @@ function createInstrumentUI(name, options = {}) {
     await ensureAudio();
     if (synth.disposed) return;
 
+    examples.stopAll();
     stop();
     updateMasterLevel();
     configure();
@@ -209,6 +210,12 @@ const examples = setupExamples({
   ensureAudio,
   getSynth: () => synth,
   getAudioContext: () => audioContext,
+  stopOthers() {
+    bassUI.stop();
+    melodyUI.stop();
+    harmonyUI.stop();
+    examples.stopAll();
+  },
 });
 
 masterInput.addEventListener("input", () => {
@@ -217,6 +224,7 @@ masterInput.addEventListener("input", () => {
 });
 
 playAllButton.addEventListener("click", async () => {
+  examples.stopAll();
   await bassUI.play();
   await melodyUI.play();
   await harmonyUI.play();
@@ -226,6 +234,7 @@ stopAllButton.addEventListener("click", () => {
   bassUI.stop();
   melodyUI.stop();
   harmonyUI.stop();
+  examples.stopAll();
 });
 
 window.addEventListener("pagehide", () => {
