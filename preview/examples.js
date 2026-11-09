@@ -18,7 +18,7 @@ import {
     createExample as createSong2Example,
 } from "../examples/05-song2.js";
 
-export function setupExamples({ ensureAudio, getSynth, getAudioContext, stopOthers }) {
+export function setupExamples({ ensureAudio, getExampleSynth, getAudioContext, stopOthers }) {
     let singleNoteExample;
     let chordExample;
     let arpeggioExample;
@@ -55,11 +55,11 @@ export function setupExamples({ ensureAudio, getSynth, getAudioContext, stopOthe
 
     async function startExample(createFn, getExample, setExample) {
         await ensureAudio();
-        stopOthers();          // stops main instruments + other examples
+        stopOthers();          // stops the three live instruments
         stopAllExamples();
 
         if (!getExample()) {
-            const ex = createFn(getSynth(), getAudioContext());
+            const ex = createFn(getExampleSynth(), getAudioContext());
             setExample(ex);
         }
 

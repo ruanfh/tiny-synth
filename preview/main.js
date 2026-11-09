@@ -18,6 +18,7 @@ const stopAllButton = document.querySelector("#stop-all");
 
 let audioContext;
 let synth;
+let exampleSynth;
 
 // ---------- Per-instrument state ----------
 
@@ -178,8 +179,14 @@ function createInstrumentUI(name, options = {}) {
 async function ensureAudio() {
   if (!audioContext) {
     audioContext = new AudioContext();
+
+    // Live panel synth
     synth = createSynth({ audioContext });
     synth.output.connect(audioContext.destination);
+
+    // Separate synth for examples – always starts with library defaults
+    exampleSynth = createSynth({ audioContext });
+    exampleSynth.output.connect(audioContext.destination);
 
     bassUI.configure();
     melodyUI.configure();
@@ -208,13 +215,12 @@ const harmonyUI = createInstrumentUI("harmony", { chord: true });
 
 const examples = setupExamples({
   ensureAudio,
-  getSynth: () => synth,
+  getExampleSynth: () => exampleSynth,
   getAudioContext: () => audioContext,
   stopOthers() {
     bassUI.stop();
     melodyUI.stop();
     harmonyUI.stop();
-    examples.stopAll();
   },
 });
 
@@ -224,7 +230,7 @@ masterInput.addEventListener("input", () => {
 });
 
 playAllButton.addEventListener("click", async () => {
-  examples.stopAll();
+  examples.stopAll();          // silence examples first
   await bassUI.play();
   await melodyUI.play();
   await harmonyUI.play();
@@ -243,6 +249,7 @@ window.addEventListener("pagehide", () => {
   harmonyUI.stop();
   examples.dispose();
   synth?.dispose();
+  exampleSynth?.dispose();
 });
 
 levelInput.addEventListener("input", () => {
